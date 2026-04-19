@@ -1,0 +1,248 @@
+{
+  "version": "1.0.0",
+  "description": "用户提示词模板",
+  "templates": {
+    "quality_review": {
+      "name": "Quality Review",
+      "description": "审查小说内容质量",
+      "input_fields": {
+        "content": "待审查的小说内容",
+        "chapter_number": "章节编号",
+        "genre": "小说类型",
+        "character_settings": "角色设定",
+        "world_settings": "世界设定",
+        "review_type": "审查类型（quick, detailed, strict）"
+      },
+      "output_format": {
+        "overall_score": "总分(1-10)",
+        "pass": "是否通过",
+        "issues_found": "问题数量",
+        "detailed_reviews": {
+          "plot": {"score": "情节得分", "issues": "问题列表", "strengths": "优点", "improvement_suggestions": "改进建议"},
+          "characters": {"score": "角色得分", "issues": "问题列表", "strengths": "优点", "improvement_suggestions": "改进建议"},
+          "world_setting": {"score": "世界得分", "issues": "问题列表", "strengths": "优点", "improvement_suggestions": "改进建议"},
+          "writing_style": {"score": "风格得分", "issues": "问题列表", "strengths": "优点", "improvement_suggestions": "改进建议"},
+          "chaos_events": {"score": "混沌事件得分", "issues": "问题列表", "strengths": "优点", "improvement_suggestions": "改进建议"}
+        },
+        "critical_issues": "严重问题列表",
+        "suggestions": "综合改进建议",
+        "revision_priority": "修订优先级（low, medium, high）"
+      }
+    },
+    "chapter_summary_generation": {
+      "name": "Chapter Summary Generation",
+      "description": "生成章节摘要",
+      "input_fields": {
+        "chapter_content": "章节内容",
+        "chapter_number": "章节编号",
+        "previous_summaries": "前面章节的摘要列表"
+      },
+      "output_format": {
+        "chapter_number": 1,
+        "title": "章节标题",
+        "summary": "章节摘要",
+        "key_events": ["关键事件1", "关键事件2"],
+        "character_developments": ["角色发展1", "角色发展2"],
+        "cliffhanger": "是否设置悬念",
+        "connections": ["与前文的关联", "对后文的铺垫"]
+      }
+    },
+    "plot_thread_tracking": {
+      "name": "Plot Thread Tracking",
+      "description": "追踪情节线索",
+      "input_fields": {
+        "current_chapter_content": "当前章节内容",
+        "all_threads": "所有情节线索列表",
+        "chapter_number": "章节编号"
+      },
+      "output_format": {
+        "threads_advanced": [
+          {
+            "thread_id": "线索ID",
+            "progress": "进展描述",
+            "new_developments": ["新发展1", "新发展2"]
+          }
+        ],
+        "threads_resolved": ["已解决的线索ID列表"],
+        "new_threads_introduced": ["新引入的线索ID列表"],
+        "plot_coherence_score": "情节连贯性评分"
+      }
+    },
+    "world_building_update": {
+      "name": "World Building Update",
+      "description": "更新世界观细节",
+      "input_fields": {
+        "new_locations": "新出现的地点",
+        "new_cultures": "新出现的文化",
+        "new_factions": "新出现的势力",
+        "characters_introduced": "新引入的角色",
+        "current_world_state": "当前世界状态"
+      },
+      "output_format": {
+        "updated_world_state": "更新后的世界状态",
+        "new_entries": {
+          "locations": ["新地点"],
+          "cultures": ["新文化"],
+          "factions": ["新势力"]
+        },
+        "connections_made": ["新建立的关联"],
+        "inconsistencies_found": ["发现的矛盾"]
+      }
+    },
+    "emotional_arc_tracking": {
+      "name": "Emotional Arc Tracking",
+      "description": "追踪角色情感弧线",
+      "input_fields": {
+        "character_name": "角色名称",
+        "current_chapter_content": "当前章节内容",
+        "past_emotional_states": "过去的情感状态列表",
+        "character_arc_type": "角色弧线类型（growth, fall, circular）"
+      },
+      "output_format": {
+        "character_name": "角色名",
+        "current_emotional_state": "当前情感状态",
+        "arc_progress": "弧线进展阶段",
+        "emotional_changes": "情感变化描述",
+        "next_expected_state": "预期的下一情感状态",
+        "arc_consistency_score": "弧线连贯性评分"
+      }
+    },
+    "world_generation": {
+      "name": "World Generation",
+      "description": "生成小说世界观",
+      "input_fields": {
+        "genre": "小说类型（fantasy, sci-fi, mystery等）",
+        "title": "小说标题",
+        "scale": "世界规模（local, regional, epic）"
+      },
+      "output_format": {
+        "locations": "地点列表",
+        "cultures": "文化列表",
+        "factions": "势力列表",
+        "magic_systems": "魔法系统列表",
+        "historical_events": "历史事件列表",
+        "world_summary": "世界概要"
+      },
+      "example": {
+        "genre": "fantasy",
+        "title": "The Eternal Kingdom",
+        "scale": "epic",
+        "output": {
+          "locations": ["Capital City", "Sacred Grove", "Dragon's Peak"],
+          "cultures": ["High Elves", "Dark Dwarves", "Human Kingdoms"],
+          "factions": ["Order of the Light", "Shadow Syndicate"],
+          "magic_systems": ["Elemental Magic", "Divine Blessing"],
+          "historical_events": ["The Great War", "The Golden Age"],
+          "world_summary": "一个充满魔法和古老秘密的世界..."
+        }
+      }
+    },
+    "character_generation": {
+      "name": "Character Generation",
+      "description": "生成小说角色",
+      "input_fields": {
+        "char_type": "角色类型（protagonist, antagonist, supporting等）",
+        "genre": "小说类型",
+        "name": "角色名称"
+      },
+      "output_format": {
+        "name": "角色名称",
+        "type": "角色类型",
+        "age": "年龄",
+        "gender": "性别",
+        "personality": "性格特点列表",
+        "background": "背景故事",
+        "goals": "目标列表",
+        "secrets": "秘密列表",
+        "relations": "关系列表",
+        "memories": "记忆列表"
+      },
+      "example": {
+        "char_type": "protagonist",
+        "genre": "fantasy",
+        "name": "Eldrin",
+        "output": {
+          "name": "Eldrin",
+          "type": "protagonist",
+          "age": 24,
+          "gender": "Male",
+          "personality": ["Brave", "Curious", "Flawed"],
+          "background": "Born into a noble family...",
+          "goals": ["Uncover the truth", "Protect loved ones"],
+          "secrets": ["A dark secret from the past"],
+          "relations": ["Allies", "Rivals"],
+          "memories": ["Childhood memory", "Pivotal moment"]
+        }
+      }
+    },
+    "outline_generation": {
+      "name": "Outline Generation",
+      "description": "生成小说大纲",
+      "input_fields": {
+        "title": "小说标题",
+        "genre": "小说类型",
+        "max_chapters": "最大章节数"
+      },
+      "output_format": {
+        "title": "标题",
+        "genre": "类型",
+        "three_act_structure": {
+          "act_1": {"chapters": "1-X", "purpose": "介绍"},
+          "act_2": {"chapters": "X-Y", "purpose": "对抗"},
+          "act_3": {"chapters": "Y-end", "purpose": "解决"}
+        },
+        "chapters": [
+          {
+            "number": 1,
+            "title": "章节标题",
+            "word_count_target": 3000,
+            "points_of_interest": ["要点1"]
+          }
+        ],
+        "plot_points": {
+          "inciting_incident": "第X章：触发事件",
+          "climax": "第end章：高潮"
+        },
+        "character_arcs": {
+          "protagonist": ["阶段1", "阶段2"]
+        }
+      }
+    },
+    "content_generation": {
+      "name": "Content Generation",
+      "description": "生成小说内容",
+      "input_fields": {
+        "chapter_number": "章节编号",
+        "chapter_title": "章节标题",
+        "outline": "该章节大纲",
+        "characters": "相关角色",
+        "world_context": "世界设定",
+        "target_word_count": "目标字数"
+      },
+      "output_format": {
+        "chapter_number": 1,
+        "title": "章节标题",
+        "content": "完整的章节内容",
+        "word_count": 3000,
+        "chaos_events": ["注入的混沌事件"]
+      }
+    }
+  },
+  "dynamic_instructions": {
+    "pacing": {
+      "slow": "节奏舒缓，注重描写和细节",
+      "normal": "节奏适中，平衡叙述和对话",
+      "fast": "节奏紧凑，快速推进情节"
+    },
+    "tension": {
+      "low": "营造平静氛围，为即将到来的冲突铺垫",
+      "medium": "保持适度紧张，推动情节发展",
+      "high": "高强度紧张感，快速节奏"
+    },
+    "dialogue_style": {
+      "formal": "正式、文雅的对话风格",
+      "casual": "随意、自然的对话风格",
+      "dynamic": "快速、紧张的对话风格"
+    }
+  }
+}

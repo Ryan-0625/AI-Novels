@@ -1,0 +1,42 @@
+{
+  "version": "1.0.0",
+  "description": "数据库连接配置模板",
+  "database": {
+    "mysql": {
+      "host": "localhost",
+      "port": 3306,
+      "user": "your_mysql_user",
+      "password": "${MYSQL_PASSWORD}",
+      "database": "ai_novels",
+      "charset": "utf8mb4",
+      "max_connections": 20,
+      "connection_timeout": 10,
+      "retry_count": 3
+    },
+    "neo4j": {
+      "uri": "bolt://localhost:7687",
+      "user": "neo4j",
+      "password": "${NEO4J_PASSWORD}",
+      "database": "neo4j",
+      "connection_timeout": 30000,
+      "retry_count": 3
+    },
+    "mongodb": {
+      "host": "localhost",
+      "port": 27017,
+      "database": "ai_novels",
+      "username": "${MONGO_USER}",
+      "password": "${MONGO_PASSWORD}",
+      "auth_source": "admin",
+      "max_pool_size": 50,
+      "retry_writes": true
+    },
+    "chromadb": {
+      "host": "localhost",
+      "port": 8000,
+      "collection_prefix": "deepnovel_",
+      "embedding_function": "default",
+      "persist_dir": "data/chromadb"
+    }
+  }
+}

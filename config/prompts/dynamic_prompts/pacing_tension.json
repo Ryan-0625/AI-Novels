@@ -1,0 +1,201 @@
+{
+  "version": "1.0.0",
+  "description": "动态提示词配置",
+  "dynamic_prompts": {
+    "pacing_instructions": {
+      "fast_pacing": {
+        "description": "快速节奏指令",
+        "keywords": "rapid, swift, sudden, accelerated, urgent",
+        "sentence_length": "short to medium",
+        "paragraph_length": "brief",
+        "transitions": "quick cuts, sudden shifts",
+        "description_level": "minimal",
+        "dialogue_percentage": "40-60%",
+        "when_to_use": "action scenes, crises, climax",
+        "verb_usage": "active voice, strong verbs",
+        "adjective_usage": "minimal"
+      },
+      "normal_pacing": {
+        "description": "正常节奏指令",
+        "keywords": "gradual, steady, deliberate, measured",
+        "sentence_length": "variable",
+        "paragraph_length": "medium",
+        "transitions": "smooth transitions, time jumps",
+        "description_level": "moderate",
+        "dialogue_percentage": "25-35%",
+        "when_to_use": "大多数章节，平衡叙述",
+        "verb_usage": "mixed active and passive",
+        "adjective_usage": "moderate"
+      },
+      "slow_pacing": {
+        "description": "慢节奏指令",
+        "keywords": "gradual, lingering, detailed, reflective",
+        "sentence_length": "medium to long",
+        "paragraph_length": "long",
+        "transitions": "smooth, time jumps marked",
+        "description_level": "detailed",
+        "dialogue_percentage": "20-30%",
+        "when_to_use": "introductory chapters, character development",
+        "verb_usage": "reflective, descriptive",
+        "adjective_usage": "high"
+      }
+    },
+    "tension_levels": {
+      "low_tension": {
+        "description": "低紧张度",
+        "atmosphere": "peaceful, calm, normal",
+        "sentence_structure": "straightforward",
+        "cliffhangers": "none or soft",
+        "conflict_level": "minor",
+        "when_to_use": "beginning of chapters, character moments",
+        "threat_level": "implied or distant",
+        "pacing_hint": "allow scenes to breath"
+      },
+      "medium_tension": {
+        "description": "中等紧张度",
+        "atmosphere": "suspenseful, alert, watchful",
+        "sentence_structure": "variable",
+        "cliffhangers": "soft subcliffhangers",
+        "conflict_level": "moderate",
+        "when_to_use": "middle of chapters, investigation scenes",
+        "threat_level": "present but manageable",
+        "pacing_hint": "maintain steady momentum"
+      },
+      "high_tension": {
+        "description": "高紧张度",
+        "atmosphere": "tense, urgent, dangerous",
+        "sentence_structure": "short, fragmented",
+        "cliffhangers": "strong, chapter-ending",
+        "conflict_level": "intense",
+        "when_to_use": "climax, battle scenes, crises",
+        "threat_level": "immediate and severe",
+        "pacing_hint": "keep readers on edge"
+      }
+    },
+    "style_modifiers": {
+      "descriptive": {
+        "adjective_frequency": "high",
+        "metaphor_frequency": "moderate",
+        "sensory_details": "all senses",
+        "when_to_use": "scene setting, important locations",
+        "description_focus": "environmental details, mood"
+      },
+      "dialogue_heavy": {
+        "dialogue_percentage": ">50%",
+        "action_description": "minimal",
+        "internal_thoughts": "moderate",
+        "when_to_use": "character interactions, conflicts",
+        "description_focus": "character reactions,Subtext"
+      },
+      "action_oriented": {
+        "adjective_frequency": "low",
+        "metaphor_frequency": "minimal",
+        "sensory_details": "core actions only",
+        "when_to_use": "battle scenes, chases, urgent situations",
+        "description_focus": "movement, sequence of actions"
+      },
+      "introspective": {
+        "adjective_frequency": "moderate",
+        "metaphor_frequency": "high",
+        "sensory_details": "internal sensation",
+        "when_to_use": "character decisions, emotional moments",
+        "description_focus": "thoughts, emotions, memories"
+      }
+    },
+    "emotion_prompts": {
+      "hopeful": "保持希望和可能性的语气",
+      "ominous": "暗示即将到来的危险",
+      "melancholy": "忧郁和怀旧的语气",
+      "joyful": "喜悦和欢乐的语气",
+      "tense": "紧张和焦虑的语气",
+      "anger": "愤怒和不满的语气",
+      "fear": "恐惧和不安的语气",
+      "serene": "平静和安宁的语气"
+    },
+    "genre_specific_prompts": {
+      "fantasy": {
+        "magic_description": "使用神秘、古老的词汇描述魔法",
+        "world_wonder": "强调奇迹和惊奇感",
+        "formal_tone": "适当使用正式的语言风格",
+        "when_to_use": "魔法场景，历史背景"
+      },
+      "sci-fi": {
+        "technology_description": "使用准确、专业的词汇描述科技",
+        "futuristic_terminology": "适使用未来术语",
+        "logical_explanation": "保持科学逻辑的合理性",
+        "when_to_use": "科技场景，未来世界"
+      },
+      "mystery": {
+        "suspense_language": "使用暗示性和模糊性的语言",
+        "red_herring_language": "使用误导性描述",
+        "clue_hidden_language": "巧妙隐藏线索的描述方式",
+        "when_to_use": "调查场景，谜题揭示"
+      },
+      "romance": {
+        "emotional_language": "强调情感表达的语言",
+        "intimacy_description": "细腻的情感描写语言",
+        " relationship_focus": "角色互动的语言",
+        "when_to_use": "情感场景，关系发展"
+      }
+    },
+    "narrative_perspective_prompts": {
+      "third_person_limited": {
+        "focus": "跟随单一角色的视角",
+        "inner_thoughts": "有限度的内心描写",
+        "knowledge_limit": "仅限当前角色知晓的信息",
+        "when_to_use": "大多数小说章节"
+      },
+      "third_person_omniscient": {
+        "focus": "全知视角",
+        "inner_thoughts": "多个角色的内心描写",
+        "knowledge_limit": "全知全能",
+        "when_to_use": "多线叙事，宏大场景"
+      },
+      "close_third": {
+        "focus": "极度贴近角色的视角",
+        "inner_thoughts": "密集的内心描写",
+        "knowledge_limit": "几乎完全的角色视角",
+        "when_to_use": "情感高潮，关键决策"
+      }
+    }
+  },
+  "template_requirements": {
+    "chapter_start": "包括时间、地点、当前状态",
+    "chapter_end": "包括过渡、悬念、下一章预告",
+    "scene_transitions": "标记时间、地点、视角变化"
+  },
+  "constraints": {
+    "sentence_variation": "混合短句、中句、长句",
+    "paragraph_balance": "避免过长或过短的段落",
+    "show_dont_tell": "优先展示而非描述",
+    "character_consistency": "保持角色行为一致性",
+    "avoid_repetition": "避免重复的词汇和结构",
+    "maintain_tone": "保持整体语气的一致性"
+  },
+  "usage_combinations": {
+    "epic_battle": {
+      "pacing": "fast_pacing",
+      "tension": "high_tension",
+      "style": "action_oriented",
+      "emotion": "tense"
+    },
+    "character_development": {
+      "pacing": "slow_pacing",
+      "tension": "low_tension",
+      "style": "introspective",
+      "emotion": "melancholy or hopeful"
+    },
+    "romantic_scene": {
+      "pacing": "normal_pacing",
+      "tension": "medium_tension",
+      "style": "descriptive",
+      "emotion": "joyful or hopeful"
+    },
+    "climax_reveal": {
+      "pacing": "fast_pacing",
+      "tension": "high_tension",
+      "style": "dialogue_heavy",
+      "emotion": "tense or ominous"
+    }
+  }
+}
