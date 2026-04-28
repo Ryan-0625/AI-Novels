@@ -1,0 +1,37 @@
+{
+  "version": "1.0.0",
+  "description": "系统预设配置",
+  "presets": {
+    "default": {
+      "name": "Default",
+      "description": "默认配置",
+      "settings": {
+        "genre": "fantasy",
+        "style": "descriptive",
+        "tone": "epic"
+      }
+    },
+    "fast_pacing": {
+      "name": "Fast Pacing",
+      "description": "快速节奏预设",
+      "settings": {
+        "genre": "adventure",
+        "style": "concise",
+        "tone": "urgent",
+        "pacing": "fast",
+        "tension": "high"
+      }
+    },
+    "literary": {
+      "name": "Literary",
+      "description": "文学风格预设",
+      "settings": {
+        "genre": "drama",
+        "style": "poetic",
+        "tone": "reflective",
+        "pacing": "slow",
+        "dialogue_percentage": 0.35
+      }
+    }
+  }
+}

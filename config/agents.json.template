@@ -1,0 +1,48 @@
+{
+  "version": "1.0.0",
+  "description": "智能体模型配置模板",
+  "agents": {
+    "coordinator": {
+      "name": "coordinator",
+      "description": "Workflow coordinator for AI novel generation",
+      "provider": "ollama",
+      "model": "qwen2.5-14b",
+      "temperature": 0.7,
+      "max_tokens": 8192,
+      "timeout": 120,
+      "system_prompt": "你是一个小说生成工作流协调员...",
+      "tools": ["file_read", "file_write", "calculation", "format_text", "echo"]
+    },
+    "task_manager": {
+      "name": "task_manager",
+      "description": "Task management and progress tracking",
+      "provider": "ollama",
+      "model": "qwen2.5-7b",
+      "temperature": 0.5,
+      "max_tokens": 4096,
+      "timeout": 60,
+      "system_prompt": "你是一个AI小说生成任务管理员...",
+      "tools": ["file_read", "file_write", "calculation", "format_text", "echo"]
+    },
+    "content_generator": {
+      "name": "content_generator",
+      "description": "Novel content generation",
+      "provider": "ollama",
+      "model": "qwen2.5-14b",
+      "temperature": 0.3,
+      "max_tokens": 8192,
+      "timeout": 120,
+      "system_prompt": "你是一个小说内容生成器...",
+      "tools": ["file_read", "file_write", "calculation", "format_text", "echo"]
+    }
+  },
+  "agent_router": {
+    "default_timeout": 120,
+    "max_retries": 3,
+    "retry_delay_seconds": 2,
+    "load_balancing": {
+      "strategy": "round_robin",
+      "enable_failover": true
+    }
+  }
+}

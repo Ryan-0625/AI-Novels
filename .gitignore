@@ -1,0 +1,178 @@
+# AI-Novels Enterprise Gitignore
+# https://github.com/Ryan-0625/AI-Novels
+
+# =============================================================================
+# IDE & Editor
+# =============================================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# AI Assistant
+.claude/
+
+# =============================================================================
+# Python
+# =============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# =============================================================================
+# Node.js / Frontend
+# =============================================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.npm
+.yarn-integrity
+
+# Build outputs
+frontend/dist/
+frontend/dist-ssr/
+*.local
+
+# =============================================================================
+# Configuration & Secrets
+# =============================================================================
+# Actual config files with sensitive data
+config/*.json
+!config/*.template.json
+!config/*.example.json
+config/.env
+config/.env.*
+!config/.env.example
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# =============================================================================
+# Logs & Data
+# =============================================================================
+logs/
+*.log
+*.log.*
+log/
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Data directories
+archive/
+config/data/
+*.sdi
+*.id
+*.wt
+*.turtle
+
+# =============================================================================
+# Testing
+# =============================================================================
+tests/
+test/
+testing/
+*_test.py
+*_tests.py
+
+# =============================================================================
+# Documentation (keep only README.md in root)
+# =============================================================================
+docs/
+*.md
+!README.md
+!LICENSE
+!CONTRIBUTING.md
+!CHANGELOG.md
+
+# =============================================================================
+# Docker & Deployment
+# =============================================================================
+.dockerignore
+docker-compose.override.yml
+*.pem
+*.key
+*.crt
+
+# Docker images (large files)
+docker-images/
+*.tar
+*.tar.gz
+
+# =============================================================================
+# Project Specific
+# =============================================================================
+.workbuddy/
+memory/
+*.backup
+*.bak
+*.tmp
+*.temp
+
+# =============================================================================
+# OS Generated
+# =============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

@@ -1,0 +1,196 @@
+# AI-Novels Docker Compose Configuration
+#==========================================================
+
+services:
+  # MySQL 8.0 - 关系型数据库，存储任务状态和日志
+  mysql:
+    image: mysql:8.0
+    container_name: ai-novels-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-password}
+      MYSQL_DATABASE: ai_novels
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # 初始化脚本：创建表结构
+      - ./init/mysql_init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-password}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ai-novels-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+
+  # Neo4j - 图数据库，存储角色关系和世界观知识图谱
+  neo4j:
+    image: neo4j:latest
+    container_name: ai-novels-neo4j
+    restart: always
+    environment:
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:-password}
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_dbms_memory_heap_initial__size: 512m
+      NEO4J_dbms_memory_heap_max__size: 2g
+      NEO4J_serveredbms_default listening address: 0.0.0.0
+    ports:
+      - "${NEO4J_HTTP_PORT:-7474}:7474"  # HTTP UI
+      - "${NEO4J_BOLT_PORT:-7687}:7687"  # Bolt protocol
+    volumes:
+      - neo4j_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p '${NEO4J_PASSWORD:-password}' 'RETURN 1' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - ai-novels-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+
+  # MongoDB - 文档数据库，存储世界圣经、角色档案、大纲、手稿
+  mongodb:
+    image: mongo:latest
+    container_name: ai-novels-mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: ai_novels
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    volumes:
+      - mongodb_data:/data/db
+      # 初始化脚本：创建集合和索引
+      - ./init/mongodb_init.js:/docker-entrypoint-initdb.d/init.js:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ping: 1})"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ai-novels-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 3G
+        reservations:
+          cpus: '0.75'
+          memory: 1.5G
+
+  # ChromaDB latest - 向量数据库，存储章节全文、钩子、角色记忆
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: ai-novels-chromadb
+    restart: always
+    ports:
+      - "${CHROMADB_PORT:-8000}:8000"
+    volumes:
+      - chromadb_data:/chromadb
+    environment:
+      ANONYMIZED_TELEMETRY: "false"
+      IS_PERSISTENT: "true"
+      PERSIST_DIRECTORY: /chromadb
+      ALLOW_RESET: "true"
+    networks:
+      - ai-novels-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+
+  # RocketMQ NameServer 5.3.0 - 消息队列名称服务器
+  rocketmq-nameserver:
+    image: apache/rocketmq:5.3.0
+    container_name: ai-novels-nameserver
+    restart: always
+    ports:
+      - "19876:9876"
+    command: ["sh", "mqnamesrv"]
+    networks:
+      - ai-novels-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # RocketMQ Broker 5.3.0 - 消息队列代理服务器
+  rocketmq-broker:
+    image: apache/rocketmq:5.3.0
+    container_name: ai-novels-broker
+    restart: always
+    ports:
+      - "${ROCKETMQ_BROKER_PORT:-10909}:10909"
+      - "${ROCKETMQ_BROKER_SSL_PORT:-10911}:10911"
+    command: ["sh", "mqbroker", "-n", "rocketmq-nameserver:9876", "-c", "/home/rocketmq/rocketmq-5.3.0/conf/broker.conf"]
+    depends_on:
+      - rocketmq-nameserver
+    networks:
+      - ai-novels-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+
+#==========================================================
+# 数据卷定义（持久化存储）
+#==========================================================
+volumes:
+  mysql_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./data/mysql
+      o: bind
+  neo4j_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./data/neo4j
+      o: bind
+  mongodb_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./data/mongodb
+      o: bind
+  chromadb_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./data/chromadb
+      o: bind
+
+#==========================================================
+# 网络定义
+#==========================================================
+networks:
+  ai-novels-network:
+    driver: bridge
