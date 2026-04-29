@@ -12,6 +12,12 @@ from .base import BaseRepository
 from .chapter_repository import ChapterContentRepository, ChapterOutlineRepository
 from .novel_repository import CharacterRepository, NovelRepository, WorldEntityRepository
 from .task_repository import TaskRepository
+from .world_simulation_repository import (
+    FactRepository,
+    EventRepository,
+    NarrativeRepository,
+    WorldRuleRepository,
+)
 
 __all__ = [
     "BaseRepository",
@@ -21,4 +27,9 @@ __all__ = [
     "ChapterOutlineRepository",
     "ChapterContentRepository",
     "TaskRepository",
+    # 世界模拟 Repository
+    "FactRepository",
+    "EventRepository",
+    "NarrativeRepository",
+    "WorldRuleRepository",
 ]

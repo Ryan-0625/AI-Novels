@@ -368,6 +368,11 @@ class PerformanceMonitor:
 monitor = PerformanceMonitor()
 
 
+def get_performance_monitor() -> PerformanceMonitor:
+    """获取性能监控器实例"""
+    return monitor
+
+
 def timed(name: str, labels: Dict[str, str] = None):
     """
     装饰器：计时函数执行

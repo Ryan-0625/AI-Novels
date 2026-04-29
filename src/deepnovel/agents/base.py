@@ -354,6 +354,7 @@ class BaseAgent(ABC):
             message: 消息
         """
         self._history.append(message)
+        self._last_message = message
         if len(self._history) > 100:  # 限制历史长度
             self._history = self._history[-100:]
 

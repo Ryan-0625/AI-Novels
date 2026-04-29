@@ -13,6 +13,18 @@ from .novel import Novel, Character, WorldEntity, OutlineNode
 from .chapter import ChapterOutline, ChapterContent
 from .narrative import Conflict, NarrativeHook
 from .task import Task, TaskStatus
+from .world_simulation import (
+    Fact,
+    FactType,
+    FactSource,
+    Event,
+    EventType,
+    Narrative,
+    NarrativeType,
+    POVType,
+    WorldRule,
+    RuleType,
+)
 
 __all__ = [
     "Novel",
@@ -25,4 +37,15 @@ __all__ = [
     "NarrativeHook",
     "Task",
     "TaskStatus",
+    # 世界模拟模型
+    "Fact",
+    "FactType",
+    "FactSource",
+    "Event",
+    "EventType",
+    "Narrative",
+    "NarrativeType",
+    "POVType",
+    "WorldRule",
+    "RuleType",
 ]

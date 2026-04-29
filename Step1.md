@@ -1,5 +1,9 @@
 # Step 1: 数据层重构 - 世界模拟架构（深化版）
 
+> **全局路线图**: [OPTIMIZED_ROADMAP.md](OPTIMIZED_ROADMAP.md) — 本Step属于 **Phase 2: 核心引擎替换**  
+> **总装规范**: [INTEGRATION_SPEC.md](INTEGRATION_SPEC.md) — 模块边界与接口契约  
+> **本Step定位**: 世界模拟基础设施（FactManager + CausalEngine + CharacterMind）
+
 ## 1. 设计哲学
 
 ### 核心转变
@@ -1894,6 +1898,8 @@ database/
 - `WORLD_SIMULATION_FEASIBILITY.md` - 可行性分析
 - `NOVEL_GENERATION_ARCHITECTURE.md` - 架构设计
 
+---
+
 ## 9. 实施状态追踪
 
 | 日期 | 完成内容 | 状态 |
@@ -1908,3 +1914,4 @@ database/
 *负责人: Ryan + 小R*
 *状态: 设计中*
 *预计工期: 8天*
+*同步状态: 本地文件（不同步GitHub）*
