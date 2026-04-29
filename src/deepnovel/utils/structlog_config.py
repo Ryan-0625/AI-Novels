@@ -61,6 +61,20 @@ def configure_structlog(
     )
 
 
+def configure_structlog_from_app():
+    """从 AppConfig 自动配置 structlog"""
+    from deepnovel.config.app_config import get_config
+
+    cfg = get_config()
+    log_cfg = cfg.log
+    configure_structlog(
+        service_name=log_cfg.service_name,
+        environment=log_cfg.environment,
+        log_level=log_cfg.level,
+        json_format=log_cfg.json_format,
+    )
+
+
 def get_structlog_logger(name: str = None):
     """获取结构化日志记录器（兼容旧版 get_logger 接口）"""
     return structlog.get_logger(name)

@@ -20,6 +20,13 @@ import redis.asyncio as redis
 from .event_bus import Event, EventPriority, EventType
 
 
+def _get_redis_url() -> str:
+    """从 AppConfig 获取 Redis URL（延迟导入避免循环依赖）"""
+    from deepnovel.config.app_config import get_config
+
+    return get_config().redis.url
+
+
 class RedisEventBus:
     """Redis Streams 持久化事件总线
 
@@ -40,6 +47,11 @@ class RedisEventBus:
         """从URL创建EventBus实例"""
         client = redis.from_url(url, decode_responses=True)
         return cls(client)
+
+    @classmethod
+    async def from_config(cls) -> "RedisEventBus":
+        """从AppConfig创建EventBus实例"""
+        return await cls.from_url(_get_redis_url())
 
     async def publish(self, event: Event) -> str:
         """发布事件到Redis Stream"""

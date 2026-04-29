@@ -108,6 +108,7 @@ class AppConfig(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
         env_prefix="APP_",
+        env_nested_delimiter="__",
     )
 
     # 应用基础
