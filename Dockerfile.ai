@@ -1,0 +1,93 @@
+# ============================================================
+# Dockerfile.ai — Python AI引擎
+# 支持多阶段构建: production (默认) / development
+# 用法:
+#   docker build -f Dockerfile.ai -t deepnovel-ai .
+#   docker build -f Dockerfile.ai --target development -t deepnovel-ai:dev .
+# ============================================================
+# syntax=docker/dockerfile:1.7
+
+ARG PYTHON_VERSION=3.13
+ARG APP_USER=appuser
+ARG APP_GROUP=appgroup
+ARG APP_UID=1000
+ARG APP_GID=1000
+
+# ─── 阶段1: 依赖构建 ───
+FROM python:${PYTHON_VERSION}-slim AS builder
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends gcc libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+COPY requirements.txt ./
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --user --no-cache-dir -r requirements.txt
+
+# ─── 阶段2: 生产运行 ───
+FROM python:${PYTHON_VERSION}-slim AS production
+
+ARG APP_USER
+ARG APP_GROUP
+ARG APP_UID
+ARG APP_GID
+
+RUN groupadd -r -g ${APP_GID} ${APP_GROUP} \
+    && useradd -r -u ${APP_UID} -g ${APP_GROUP} ${APP_USER}
+
+WORKDIR /app
+
+# 从builder复制已安装的包
+COPY --from=builder --chown=${APP_UID}:${APP_GID} /root/.local /home/${APP_USER}/.local
+ENV PATH=/home/${APP_USER}/.local/bin:$PATH \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app/src
+
+# 复制应用代码
+COPY --chown=${APP_UID}:${APP_GID} src/ ./src/
+COPY --chown=${APP_UID}:${APP_GID} config/ ./config/
+COPY --chown=${APP_UID}:${APP_GID} start_server.py ./
+
+USER ${APP_USER}
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)" || exit 1
+
+CMD ["python", "start_server.py"]
+
+# ─── 阶段3: 开发运行 ───
+FROM python:${PYTHON_VERSION}-slim AS development
+
+ARG APP_USER
+ARG APP_GROUP
+ARG APP_UID
+ARG APP_GID
+
+RUN groupadd -r -g ${APP_GID} ${APP_GROUP} \
+    && useradd -r -u ${APP_UID} -g ${APP_GROUP} ${APP_USER} \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends gcc libpq-dev git \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY requirements.txt ./
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-cache-dir -r requirements.txt \
+    && pip install debugpy watchfiles
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app/src \
+    APP_ENV=development
+
+EXPOSE 8000 5678
+
+USER ${APP_USER}
+
+CMD ["python", "-m", "debugpy", "--listen", "0.0.0.0:5678", "--wait-for-client", "-m", "uvicorn", "src.deepnovel.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
