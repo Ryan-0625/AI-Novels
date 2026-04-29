@@ -25,6 +25,17 @@ from .world_simulation import (
     WorldRule,
     RuleType,
 )
+from .memory import (
+    EpisodicMemory,
+    SemanticMemory,
+    EmotionalMemory,
+    ProceduralMemory,
+    KnowledgeType,
+    SourceType,
+    TriggerType,
+    ReactionType,
+    SkillCategory,
+)
 
 __all__ = [
     "Novel",
@@ -48,4 +59,14 @@ __all__ = [
     "POVType",
     "WorldRule",
     "RuleType",
+    # 记忆系统模型
+    "EpisodicMemory",
+    "SemanticMemory",
+    "EmotionalMemory",
+    "ProceduralMemory",
+    "KnowledgeType",
+    "SourceType",
+    "TriggerType",
+    "ReactionType",
+    "SkillCategory",
 ]

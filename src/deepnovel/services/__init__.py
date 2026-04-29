@@ -13,6 +13,13 @@ from .world_state_service import WorldStateService
 from .event_service import EventService
 from .narrative_service import NarrativeService
 from .world_rule_service import WorldRuleService
+from .memory_service import (
+    MemoryEncodingService,
+    MemoryRetrievalService,
+    MemoryConsolidationService,
+    MemoryForgettingService,
+    MemoryManager,
+)
 
 __all__ = [
     "BaseService",
@@ -25,4 +32,10 @@ __all__ = [
     "EventService",
     "NarrativeService",
     "WorldRuleService",
+    # 记忆系统服务
+    "MemoryEncodingService",
+    "MemoryRetrievalService",
+    "MemoryConsolidationService",
+    "MemoryForgettingService",
+    "MemoryManager",
 ]

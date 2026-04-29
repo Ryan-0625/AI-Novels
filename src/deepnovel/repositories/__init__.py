@@ -18,6 +18,12 @@ from .world_simulation_repository import (
     NarrativeRepository,
     WorldRuleRepository,
 )
+from .memory_repository import (
+    EpisodicMemoryRepository,
+    SemanticMemoryRepository,
+    EmotionalMemoryRepository,
+    ProceduralMemoryRepository,
+)
 
 __all__ = [
     "BaseRepository",
@@ -32,4 +38,9 @@ __all__ = [
     "EventRepository",
     "NarrativeRepository",
     "WorldRuleRepository",
+    # 记忆系统 Repository
+    "EpisodicMemoryRepository",
+    "SemanticMemoryRepository",
+    "EmotionalMemoryRepository",
+    "ProceduralMemoryRepository",
 ]
