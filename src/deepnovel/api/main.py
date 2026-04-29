@@ -27,7 +27,10 @@ from src.deepnovel.agents.agent_communicator import AgentCommunicator
 from src.deepnovel.model.message import TaskRequest, TaskResponse, TaskStatusUpdate, AgentMessage
 from src.deepnovel.utils import log_info, log_error
 
-# 导入配置管理器
+# 新版配置系统（ConfigHub）
+from deepnovel.config.hub import ConfigHub, get_config_hub
+
+# 旧版配置系统（向后兼容，Phase 5 后移除）
 from src.deepnovel.config.manager import ConfigManager, settings
 
 # 导入控制器
@@ -86,7 +89,15 @@ async def startup_event():
     """应用启动时初始化"""
     log_info("AI-Novels API starting...")
 
-    # 初始化配置管理器
+    # 1. 初始化新版 ConfigHub（优先）
+    try:
+        config_hub = get_config_hub()
+        app.state.config_hub = config_hub
+        log_info(f"ConfigHub initialized: {config_hub.config.app_version}")
+    except Exception as e:
+        log_error(f"ConfigHub initialization failed: {e}")
+
+    # 2. 保留旧版 ConfigManager 初始化（向后兼容）
     config_manager = ConfigManager()
     config_paths = [
         "config/system.json",
@@ -97,15 +108,14 @@ async def startup_event():
         "config/messaging.json"
     ]
 
-    # 只加载存在的配置文件
     existing_paths = [p for p in config_paths if os.path.exists(p)]
-    log_info(f"Loading config files: {existing_paths}")
-
-    if config_manager.initialize(existing_paths):
-        settings.initialize(config_manager)
-        log_info("ConfigManager and settings initialized successfully")
-    else:
-        log_error("Failed to initialize ConfigManager")
+    if existing_paths:
+        log_info(f"Loading legacy config files: {existing_paths}")
+        if config_manager.initialize(existing_paths):
+            settings.initialize(config_manager)
+            log_info("Legacy ConfigManager initialized")
+        else:
+            log_error("Failed to initialize legacy ConfigManager")
 
     # 初始化CoordinatorAgent（不启动通信器以避免阻塞）
     app.state.coordinator = CoordinatorAgent()
