@@ -12,6 +12,7 @@ Agent 可直接调用的检索增强生成工具集：
 
 from typing import Any, Dict, List, Optional
 
+from deepnovel.agents.tools.tool_registry import tool
 from deepnovel.llm.embedding_adapter import EmbeddingAdapter, EmbeddingConfig, EmbeddingProvider
 from deepnovel.rag import RAGEngine, RAGConfig
 from deepnovel.rag.chunker import Chunk, TextChunker
@@ -36,6 +37,7 @@ class DocumentIndexTool:
             vector_store=InMemoryVectorStore(),
         )
 
+    @tool(description="索引单篇文档到知识库，自动分块")
     async def index_document(
         self,
         text: str,
@@ -67,6 +69,7 @@ class DocumentIndexTool:
             "source_id": source_id,
         }
 
+    @tool(description="批量索引多篇文档")
     async def index_documents(
         self,
         texts: List[str],
@@ -93,6 +96,7 @@ class DocumentIndexTool:
             "total_chunks": total,
         }
 
+    @tool(description="直接索引预分块文档")
     async def index_chunks(
         self,
         chunks: List[Chunk],
@@ -115,6 +119,7 @@ class DocumentIndexTool:
             "chunk_count": len(chunk_ids),
         }
 
+    @tool(description="索引世界观设定文本")
     async def index_world_lore(
         self,
         lore_text: str,
@@ -141,6 +146,7 @@ class DocumentIndexTool:
             metadata={"category": category, "type": "world_lore"},
         )
 
+    @tool(description="索引角色设定文本")
     async def index_character_profile(
         self,
         profile_text: str,
@@ -184,6 +190,7 @@ class DocumentRetrieveTool:
             vector_store=InMemoryVectorStore(),
         )
 
+    @tool(description="检索知识库，返回相关知识")
     async def search(
         self,
         query: str,
@@ -217,6 +224,7 @@ class DocumentRetrieveTool:
         )
         return result.to_dict()
 
+    @tool(description="多查询检索，融合多个相关查询的结果")
     async def search_multi_query(
         self,
         queries: List[str],
@@ -243,6 +251,7 @@ class DocumentRetrieveTool:
         )
         return result.to_dict()
 
+    @tool(description="检索世界观设定")
     async def search_world_lore(
         self,
         query: str,
@@ -272,6 +281,7 @@ class DocumentRetrieveTool:
             filters=filters,
         )
 
+    @tool(description="检索角色相关知识")
     async def search_character_knowledge(
         self,
         query: str,
@@ -302,6 +312,7 @@ class DocumentRetrieveTool:
             filters=filters,
         )
 
+    @tool(description="构建 LLM 上下文，返回格式化文本")
     async def build_context(
         self,
         query: str,
@@ -347,18 +358,22 @@ class KnowledgeBaseTool:
             vector_store=InMemoryVectorStore(),
         )
 
+    @tool(description="获取知识库统计信息")
     async def get_stats(self) -> Dict[str, Any]:
         """获取知识库统计"""
         return await self._rag.get_stats()
 
+    @tool(description="清空知识库")
     async def clear(self) -> bool:
         """清空知识库"""
         return await self._rag.clear()
 
+    @tool(description="按来源删除文档")
     async def delete_by_source(self, source_id: str) -> int:
         """按来源删除"""
         return await self._rag.delete_by_source(source_id)
 
+    @tool(description="获取当前配置")
     async def get_config(self) -> Dict[str, Any]:
         """获取当前配置"""
         return self._rag.config.to_dict()
