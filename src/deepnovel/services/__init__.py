@@ -1,12 +1,19 @@
 """
-系统服务模块
+服务层 — 业务逻辑封装
 
 @file: services/__init__.py
-@date: 2026-03-18
-@version: 1.0
-@description: 系统服务模块初始化
+@date: 2026-04-29
 """
 
-from src.deepnovel.services.health_service import get_health_service, HealthService
+from .base import BaseService
+from .health_service import get_health_service, HealthService
+from .novel_service import NovelService
+from .task_service import TaskService
 
-__all__ = ["get_health_service", "HealthService"]
+__all__ = [
+    "BaseService",
+    "get_health_service",
+    "HealthService",
+    "NovelService",
+    "TaskService",
+]
