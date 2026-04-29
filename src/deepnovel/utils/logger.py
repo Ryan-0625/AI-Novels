@@ -253,6 +253,10 @@ class HierarchicalLogger:
         """消息队列调试日志"""
         self._log('MESSAGING', 'DEBUG', message, **kwargs)
 
+    def messaging_error(self, message: str, **kwargs):
+        """消息队列错误日志"""
+        self._log('MESSAGING', 'ERROR', message, **kwargs)
+
     def api(self, message: str, **kwargs):
         """API日志"""
         self._log('API', 'INFO', message, **kwargs)
