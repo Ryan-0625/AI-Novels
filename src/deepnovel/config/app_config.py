@@ -12,10 +12,12 @@
 """
 
 from functools import lru_cache
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from deepnovel.config.novel_config import NovelConfig
 
 
 class DatabaseConfig(BaseSettings):
@@ -126,6 +128,10 @@ class AppConfig(BaseSettings):
     redis: RedisConfig = Field(default_factory=RedisConfig)
     llm: LLMConfig = Field(default_factory=LLMConfig)
     log: LogConfig = Field(default_factory=LogConfig)
+    novel: NovelConfig = Field(default_factory=lambda: NovelConfig(
+        title="未命名小说",
+        genre="other",
+    ))
 
     @field_validator("environment")
     @classmethod

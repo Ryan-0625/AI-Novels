@@ -27,6 +27,7 @@ from deepnovel.agents.tools.tool_registry import (
     get_tool_registry,
 )
 from deepnovel.core.event_bus import EventBus, EventPriority, EventType
+from deepnovel.core.memory_context import MemoryContext
 from deepnovel.core.working_memory import AttentionController, WorkingMemory
 from deepnovel.llm.tier import ModelTier, TierConfig, TierRouter
 from deepnovel.rag.rag_engine import RAGEngine
@@ -86,11 +87,14 @@ class ToolEnabledAgent(BaseAgent):
         self._tier_router = config.tier_router or TierRouter()
         self._default_tier = config.default_tier
 
-        # ---- 工作记忆 ----
-        self._attention = AttentionController(
-            capacity=config.working_memory_capacity
+        # ---- 记忆上下文（三级记忆） ----
+        self._memory_context = MemoryContext(
+            character_id=f"agent_{self._name}",
+            working_memory_capacity=config.working_memory_capacity,
         )
-        self._working_memory = self._attention.working_memory
+        # 向后兼容：直接暴露工作记忆和注意力
+        self._attention = self._memory_context.attention
+        self._working_memory = self._memory_context.working_memory
 
         # ---- RAG ----
         self._rag_engine = config.rag_engine
@@ -283,17 +287,14 @@ class ToolEnabledAgent(BaseAgent):
         if extra_constraints:
             constraints.extend(extra_constraints)
 
-        # 获取工作记忆条目
+        # 获取记忆上下文（含工作记忆、注意力焦点、情感状态等）
         working_memory = None
+        memory_context_data = None
         if self._tool_config.enable_working_memory:
-            entries = self._working_memory.get_active_entries(min_activation=0.2)
-            working_memory = [
-                {
-                    "entry_type": e.entry_type,
-                    "content": str(e.content)[:300],  # 截断避免过长
-                }
-                for e in entries[:5]  # 最多 5 条
-            ]
+            memory_context_data = self._memory_context.build_context_for_prompt(
+                max_entries=5
+            )
+            working_memory = memory_context_data.get("working_memory")
 
         # 获取工具 schema
         schemas = tool_schemas
@@ -427,6 +428,50 @@ class ToolEnabledAgent(BaseAgent):
     def clear_working_memory(self) -> None:
         """清空工作记忆"""
         self._working_memory.clear()
+
+    # ---- 三级记忆上下文（MemoryContext） ----
+
+    def perceive(
+        self,
+        stimulus: Any,
+        *,
+        emotional_salience: float = 0.0,
+        novelty: float = 0.5,
+        source: str = "",
+        tags: Optional[set] = None,
+    ) -> Optional[Any]:
+        """感知输入（感觉记忆 → 工作记忆）"""
+        return self._memory_context.perceive(
+            stimulus=stimulus,
+            emotional_salience=emotional_salience,
+            novelty=novelty,
+            source=source,
+            tags=tags,
+        )
+
+    def get_memory_context(self) -> MemoryContext:
+        """获取记忆上下文实例"""
+        return self._memory_context
+
+    def get_memory_context_state(self) -> Dict[str, Any]:
+        """获取完整记忆上下文状态"""
+        return self._memory_context.to_dict()
+
+    def enable_long_term_memory(self, memory_manager: Any) -> None:
+        """启用长期记忆（注入 MemoryManager）"""
+        self._memory_context.enable_long_term_memory(memory_manager)
+
+    async def retrieve_long_term_memory(
+        self,
+        session: Any,
+        query: str,
+        top_k: int = 5,
+    ) -> Dict[str, Any]:
+        """从长期记忆检索信息"""
+        snapshot = await self._memory_context.retrieve_long_term(
+            session, query, top_k=top_k
+        )
+        return snapshot.to_dict()
 
     # ---- 事件 ----
 
