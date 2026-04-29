@@ -1905,13 +1905,15 @@ database/
 | 日期 | 完成内容 | 状态 |
 |------|---------|------|
 | 2026-04-28 | 完成Step1.md设计文档 | ✅ |
+| 2026-04-29 | 实现世界模拟数据层（Fact/Event/Narrative/WorldRule模型+Repository+单元测试） | ✅ |
+| 2026-04-29 | 实现世界模拟Service层（WorldState/Event/Narrative/WorldRule服务） | 🔄 |
 
 ---
 
-*版本: v1.0（深化版）*
+*版本: v1.1（实施中）*
 *创建日期: 2026-04-28*
-*更新日期: 2026-04-28*
+*更新日期: 2026-04-29*
 *负责人: Ryan + 小R*
-*状态: 设计中*
+*状态: 实施中*
 *预计工期: 8天*
-*同步状态: 本地文件（不同步GitHub）*
+*同步状态: 已同步GitHub（feature/refactor-infra分支）*

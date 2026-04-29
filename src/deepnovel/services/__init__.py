@@ -9,6 +9,10 @@ from .base import BaseService
 from .health_service import get_health_service, HealthService
 from .novel_service import NovelService
 from .task_service import TaskService
+from .world_state_service import WorldStateService
+from .event_service import EventService
+from .narrative_service import NarrativeService
+from .world_rule_service import WorldRuleService
 
 __all__ = [
     "BaseService",
@@ -16,4 +20,9 @@ __all__ = [
     "HealthService",
     "NovelService",
     "TaskService",
+    # 世界模拟服务
+    "WorldStateService",
+    "EventService",
+    "NarrativeService",
+    "WorldRuleService",
 ]
