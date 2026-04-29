@@ -18,8 +18,9 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from deepnovel.api.dependencies import get_config_dep, get_db_session
+from deepnovel.api.dependencies import get_config_dep, get_config_hub_dep, get_db_session
 from deepnovel.config.app_config import AppConfig
+from deepnovel.config.hub import ConfigHub
 
 router = APIRouter(tags=["health"])
 
@@ -28,7 +29,22 @@ router = APIRouter(tags=["health"])
 async def health_check(
     session: AsyncSession = Depends(get_db_session),
     config: AppConfig = Depends(get_config_dep),
+    hub: ConfigHub = Depends(get_config_hub_dep),
 ) -> Dict[str, Any]:
+    """返回系统各组件健康状态"""
+    checks = {
+        "status": "healthy",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "version": config.app_version,
+        "environment": config.environment,
+        "checks": {},
+    }
+
+    # ConfigHub 状态（测试时 hub 可能是 MagicMock）
+    try:
+        checks["config_hub_ready"] = hub.is_initialized
+    except AttributeError:
+        checks["config_hub_ready"] = False
     """返回系统各组件健康状态"""
     checks = {
         "status": "healthy",

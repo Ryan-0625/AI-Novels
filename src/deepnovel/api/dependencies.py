@@ -15,6 +15,7 @@ from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from deepnovel.config.app_config import AppConfig, get_config
+from deepnovel.config.hub import ConfigHub, get_config_hub
 from deepnovel.database.engine import get_db
 from deepnovel.repositories import (
     CharacterRepository,
@@ -33,8 +34,13 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def get_config_dep() -> AppConfig:
-    """FastAPI 配置依赖"""
-    return get_config()
+    """FastAPI 配置依赖（新版 - 通过 ConfigHub）"""
+    return get_config_hub().config
+
+
+async def get_config_hub_dep() -> ConfigHub:
+    """FastAPI ConfigHub 依赖"""
+    return get_config_hub()
 
 
 class RepositoryProvider:
