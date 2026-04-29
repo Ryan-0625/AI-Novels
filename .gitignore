@@ -124,23 +124,36 @@ config/data/
 *.turtle
 
 # =============================================================================
-# Testing
+# Testing (keep test code, ignore coverage reports)
 # =============================================================================
-tests/
-test/
-testing/
-*_test.py
-*_tests.py
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
 
 # =============================================================================
-# Documentation (keep only README.md in root)
+# Documentation directories (ignore generated docs, keep project plans)
 # =============================================================================
 docs/
-*.md
+doc/
+
+# Keep project reconstruction plans and root documentation
+!Step*.md
 !README.md
 !LICENSE
 !CONTRIBUTING.md
 !CHANGELOG.md
+!REVIEW_*.md
+!INTEGRATION_SPEC.md
+!OPTIMIZED_ROADMAP.md
+!REFACTOR_GAP_ANALYSIS.md
 
 # =============================================================================
 # Docker & Deployment
