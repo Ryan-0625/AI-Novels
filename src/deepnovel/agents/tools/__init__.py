@@ -23,6 +23,11 @@ from .memory_tools import (
     MemoryRetrievalTool,
     MemoryConsolidationTool,
 )
+from .rag_tools import (
+    DocumentIndexTool,
+    DocumentRetrieveTool,
+    KnowledgeBaseTool,
+)
 
 __all__ = [
     "WorldStateTool",
@@ -33,4 +38,8 @@ __all__ = [
     "MemoryEncodingTool",
     "MemoryRetrievalTool",
     "MemoryConsolidationTool",
+    # RAG 工具
+    "DocumentIndexTool",
+    "DocumentRetrieveTool",
+    "KnowledgeBaseTool",
 ]

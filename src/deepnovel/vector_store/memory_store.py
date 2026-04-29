@@ -46,9 +46,15 @@ class InMemoryVectorStore(VectorStore):
     适合单元测试和小规模开发场景。
     """
 
-    def __init__(self, collection_name: str = "default", embedding_dim: int = 128):
+    def __init__(
+        self,
+        collection_name: str = "default",
+        embedding_dim: int = 128,
+        embedding_adapter=None,
+    ):
         self.collection_name = collection_name
         self.embedding_dim = embedding_dim
+        self._embedder = embedding_adapter
         self._docs: Dict[str, VectorDocument] = {}
         self._connected = False
 
@@ -76,7 +82,10 @@ class InMemoryVectorStore(VectorStore):
         count = 0
         for doc in documents:
             if doc.embedding is None:
-                doc.embedding = _simple_hash_embedding(doc.content, self.embedding_dim)
+                if self._embedder is not None:
+                    doc.embedding = self._embedder.embed(doc.content)
+                else:
+                    doc.embedding = _simple_hash_embedding(doc.content, self.embedding_dim)
             self._docs[doc.id] = doc
             count += 1
             if count >= batch_size:
@@ -91,7 +100,10 @@ class InMemoryVectorStore(VectorStore):
         filters: Optional[Dict[str, Any]] = None,
     ) -> List[SearchResult]:
         """语义搜索"""
-        query_emb = _simple_hash_embedding(query, self.embedding_dim)
+        if self._embedder is not None:
+            query_emb = self._embedder.embed(query)
+        else:
+            query_emb = _simple_hash_embedding(query, self.embedding_dim)
 
         results = []
         for doc in self._docs.values():
