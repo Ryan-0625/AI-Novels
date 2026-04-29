@@ -45,14 +45,6 @@ async def health_check(
         checks["config_hub_ready"] = hub.is_initialized
     except AttributeError:
         checks["config_hub_ready"] = False
-    """返回系统各组件健康状态"""
-    checks = {
-        "status": "healthy",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "version": config.app_version,
-        "environment": config.environment,
-        "checks": {},
-    }
 
     # 数据库健康检查
     try:

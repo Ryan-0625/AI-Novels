@@ -33,6 +33,9 @@ from deepnovel.config.hub import ConfigHub, get_config_hub
 # 旧版配置系统（向后兼容，Phase 5 后移除）
 from src.deepnovel.config.manager import ConfigManager, settings
 
+# 新版任务编排器（Step 11）
+from deepnovel.agents.task_orchestrator import TaskOrchestrator
+
 # 导入控制器
 from .controllers import (
     task_controller,
@@ -41,8 +44,11 @@ from .controllers import (
     health_controller
 )
 
-# 导入路由
-from .routes import router
+# 导入旧版路由
+from .legacy_routes import router
+
+# Step 11: 新版领域路由
+from deepnovel.api.routes import task_router, agent_router, config_router
 
 # 创建FastAPI应用
 app = FastAPI(
@@ -120,6 +126,17 @@ async def startup_event():
     # 初始化CoordinatorAgent（不启动通信器以避免阻塞）
     app.state.coordinator = CoordinatorAgent()
 
+    # 3. 初始化 TaskOrchestrator（Step 11）
+    try:
+        task_orch = TaskOrchestrator(max_workers=4)
+        await task_orch.start()
+        app.state.task_orchestrator = task_orch
+        log_info("TaskOrchestrator initialized with 4 workers")
+    except Exception as e:
+        log_error(f"TaskOrchestrator initialization failed: {e}")
+        # 创建一个最小可用的 orchestrator 避免路由崩溃
+        app.state.task_orchestrator = None
+
     # 通信器将按需初始化，避免启动时阻塞
     # app.state.communicator = AgentCommunicator("api_server")
     # if hasattr(app.state.coordinator, 'start_communication'):
@@ -138,10 +155,23 @@ async def shutdown_event():
     # if hasattr(app.state, 'coordinator') and hasattr(app.state.coordinator, 'stop_communication'):
     #     app.state.coordinator.stop_communication()
 
+    # 关闭 TaskOrchestrator
+    if hasattr(app.state, 'task_orchestrator') and app.state.task_orchestrator is not None:
+        try:
+            await app.state.task_orchestrator.shutdown()
+            log_info("TaskOrchestrator shutdown")
+        except Exception as e:
+            log_error(f"TaskOrchestrator shutdown error: {e}")
+
     log_info("AI-Novels API shutdown complete")
 
 # 注册路由
 app.include_router(router, prefix="/api/v1")
+
+# Step 11: 新版领域路由（ConfigHub + TaskOrchestrator）
+app.include_router(task_router, prefix="/api/v2")
+app.include_router(agent_router, prefix="/api/v2")
+app.include_router(config_router, prefix="/api/v2")
 
 # 健康检查
 @app.get("/health")

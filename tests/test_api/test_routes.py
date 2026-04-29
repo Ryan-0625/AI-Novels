@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 # 导入FastAPI应用
 from src.deepnovel.api.main import app
-from src.deepnovel.api.routes import (
+from src.deepnovel.api.legacy_routes import (
     TaskCreateRequest,
     TaskCreateResponse,
     TaskStatusResponse
