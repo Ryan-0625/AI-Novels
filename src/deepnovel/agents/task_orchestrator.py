@@ -21,7 +21,6 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from deepnovel.agents.base import BaseAgent, Message, MessageType
-from deepnovel.agents.tool_enabled_agent import ToolEnabledAgent
 from deepnovel.agents.workflow_orchestrator import (
     HandoffType,
     TaskState,
@@ -86,7 +85,7 @@ class QueuedTask:
 class WorkerSlot:
     """工作器槽位"""
 
-    agent: ToolEnabledAgent
+    agent: BaseAgent
     state: WorkerState = WorkerState.IDLE
     current_task: Optional[str] = None
     total_tasks: int = 0
@@ -241,8 +240,8 @@ class TaskOrchestrator:
 
     # ---- 工作器管理 ----
 
-    def register_worker(self, agent: ToolEnabledAgent) -> bool:
-        """注册 ToolEnabledAgent 作为工作器"""
+    def register_worker(self, agent: BaseAgent) -> bool:
+        """注册 BaseAgent 作为工作器"""
         if agent.name in self._workers:
             return False
 
@@ -277,6 +276,21 @@ class TaskOrchestrator:
         return [
             name for name, slot in self._workers.items() if slot.is_available
         ]
+
+    def list_tasks(self) -> List[Dict[str, Any]]:
+        """列出所有队列中的任务"""
+        tasks = []
+        for task_id, queued in self._queued_tasks.items():
+            task_info = queued.to_dict()
+            # 检查是否有结果
+            result = self._results.get(task_id)
+            if result:
+                task_info["result"] = result
+                task_info["status"] = "completed" if result.get("success") else "failed"
+            else:
+                task_info["status"] = "pending"
+            tasks.append(task_info)
+        return tasks
 
     # ---- 任务提交 ----
 

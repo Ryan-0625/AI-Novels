@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
+from deepnovel.agents.task_orchestrator import TaskPriority
 from deepnovel.api.dependencies import get_config_hub_dep
 from deepnovel.config.hub import ConfigHub
 
@@ -55,6 +56,25 @@ class TaskDetailResponse(BaseModel):
     completed_at: Optional[str] = None
 
 
+class TaskCreateRequest(BaseModel):
+    """任务创建请求"""
+
+    agent_name: str = Field(..., description="执行任务的 Agent 名称")
+    payload: Dict[str, Any] = Field(default_factory=dict, description="任务负载")
+    priority: str = Field(default="NORMAL", description="优先级: CRITICAL/HIGH/NORMAL/LOW/BACKGROUND")
+    correlation_id: Optional[str] = Field(default=None, description="关联ID")
+    timeout: int = Field(default=300, description="超时时间（秒）")
+
+
+class TaskCreateResponse(BaseModel):
+    """任务创建响应"""
+
+    task_id: str
+    agent_name: str
+    status: str
+    message: str
+
+
 class TaskActionRequest(BaseModel):
     """任务操作请求"""
 
@@ -92,29 +112,92 @@ def get_task_orchestrator(request: Request):
 # ---- API 端点 ----
 
 
+@router.post("", response_model=TaskCreateResponse, summary="创建任务")
+async def create_task(
+    req: TaskCreateRequest,
+    orchestrator=Depends(get_task_orchestrator),
+):
+    """提交新任务到 TaskOrchestrator"""
+    try:
+        priority = TaskPriority[req.priority.upper()]
+    except KeyError:
+        priority = TaskPriority.NORMAL
+
+    task_id = await orchestrator.submit(
+        agent_name=req.agent_name,
+        payload=req.payload,
+        priority=priority,
+        correlation_id=req.correlation_id,
+        timeout=req.timeout,
+    )
+
+    return TaskCreateResponse(
+        task_id=task_id,
+        agent_name=req.agent_name,
+        status="submitted",
+        message=f"Task submitted successfully to agent '{req.agent_name}'",
+    )
+
+
 @router.get("", response_model=TaskListResponse, summary="获取任务列表")
 async def list_tasks(
     orchestrator=Depends(get_task_orchestrator),
 ):
     """列出所有任务状态"""
-    stats = orchestrator.get_stats()
-    workers = stats.get("workers", {})
-    queued = stats.get("queued_tasks", 0)
-    completed = stats.get("completed", 0)
-
     tasks = []
-    for name, info in workers.items():
-        tasks.append(
-            TaskListItem(
-                task_id=info.get("current_task") or "idle",
-                agent_name=name,
-                status="running" if not info.get("idle", True) else "idle",
-                priority="normal",
-                created_at="",
-            )
-        )
 
-    return TaskListResponse(tasks=tasks, total=len(tasks) + queued + completed)
+    # 优先从队列获取真实任务
+    try:
+        all_tasks = orchestrator.list_tasks()
+        for t in all_tasks:
+            tasks.append(
+                TaskListItem(
+                    task_id=t["task_id"],
+                    agent_name=t["agent_name"],
+                    status=t.get("status", "pending"),
+                    priority=str(t.get("priority", "normal")),
+                    created_at=str(t.get("enqueue_time", "")),
+                )
+            )
+    except Exception:
+        pass
+
+    # 补充 worker 当前执行的任务
+    try:
+        workers = orchestrator.list_workers()
+        for w in workers:
+            current = w.get("current_task")
+            if current and current != "idle" and not any(t.task_id == current for t in tasks):
+                tasks.append(
+                    TaskListItem(
+                        task_id=current,
+                        agent_name=w["name"],
+                        status="running",
+                        priority="normal",
+                        created_at="",
+                    )
+                )
+    except Exception:
+        pass
+
+    # 兜底：从 stats 获取（向后兼容旧 mock）
+    if not tasks:
+        try:
+            stats = orchestrator.get_stats()
+            for name, info in stats.get("workers", {}).items():
+                tasks.append(
+                    TaskListItem(
+                        task_id=info.get("current_task") or "idle",
+                        agent_name=name,
+                        status="running" if not info.get("idle", True) else "idle",
+                        priority="normal",
+                        created_at="",
+                    )
+                )
+        except Exception:
+            pass
+
+    return TaskListResponse(tasks=tasks, total=len(tasks))
 
 
 @router.get("/{task_id}", response_model=TaskDetailResponse, summary="获取任务详情")

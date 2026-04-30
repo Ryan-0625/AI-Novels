@@ -287,7 +287,14 @@ class ContentGeneratorAgent(BaseAgent):
         """处理风格命令"""
         content = str(message.content)
 
-        if "set" in content:
+        content_lower = content.lower()
+
+        # 注意: "preset" 包含 "set" 子串，必须先检查 preset
+        if "preset" in content_lower:
+            preset = self._extract_param(content, "preset", "balanced")
+            return self._set_preset_style(preset)
+
+        if "set" in content_lower:
             vocab = int(self._extract_param(content, "vocabulary", "5"))
             sentence = self._extract_param(content, "sentence", "variable")
             distance = self._extract_param(content, "distance", "moderate")
@@ -313,7 +320,7 @@ class ContentGeneratorAgent(BaseAgent):
 
             return self._create_message(response, MessageType.TEXT)
 
-        elif "show" in content or "current" in content:
+        if "show" in content_lower or "current" in content_lower:
             style = self._default_style
             response = "Current Style Config:\n\n"
             response += f"Vocabulary: {style.vocabulary_level}\n"
@@ -323,10 +330,6 @@ class ContentGeneratorAgent(BaseAgent):
             response += f"Pacing: {style.pacing}\n"
 
             return self._create_message(response, MessageType.TEXT)
-
-        elif "preset" in content:
-            preset = self._extract_param(content, "preset", "balanced")
-            return self._set_preset_style(preset)
 
         return self._handle_general_request(message)
 
@@ -571,10 +574,6 @@ class ContentGeneratorAgent(BaseAgent):
 
         # 选择合适的模板
         constraint = StyleConstraint.NARRATIVE
-        if section_index == 0:
-            constraint = StyleConstraint.SETUP
-        elif section_index == len(context.beats):
-            constraint = StyleConstraint.CONCLUSION
 
         template_func = section_templates.get(constraint, self._generate_narrative)
 
@@ -689,8 +688,8 @@ class ContentGeneratorAgent(BaseAgent):
     ) -> str:
         """构建生成提示词 - 使用语言配置"""
         # 获取语言配置
-        lang_name = settings.language_name if settings else "English"
-        lang_code = settings.language_code if settings else "en-US"
+        lang_name = getattr(settings, "language_name", None) or "English"
+        lang_code = getattr(settings, "language_code", None) or "en-US"
 
         # 构建上下文信息字符串
         context_info = self._build_context_info(context)

@@ -8,6 +8,8 @@ RAG 引擎 — 文档检索增强生成集成层
 @date: 2026-04-29
 """
 
+import os
+import warnings
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
@@ -17,6 +19,13 @@ from deepnovel.rag.indexer import DocumentIndexer
 from deepnovel.rag.retriever import RetrievedChunk, SemanticRetriever
 from deepnovel.vector_store import VectorStore
 from deepnovel.vector_store.memory_store import InMemoryVectorStore
+
+
+def _get_default_embedding_config() -> tuple[str, str]:
+    """获取默认 embedding 配置（优先 Ollama，可环境变量覆盖）"""
+    provider = os.environ.get("EMBEDDING_PROVIDER", "ollama").lower()
+    model = os.environ.get("EMBEDDING_MODEL", "nomic-embed-text")
+    return provider, model
 
 
 @dataclass
@@ -31,9 +40,9 @@ class RAGConfig:
     min_score: float = 0.0
     keyword_weight: float = 0.3
     diversity_lambda: float = 0.5
-    embedding_dimension: int = 128
-    embedding_provider: str = EmbeddingProvider.MOCK.value
-    embedding_model: str = "mock-model"
+    embedding_dimension: int = 768
+    embedding_provider: str = field(default_factory=lambda: _get_default_embedding_config()[0])
+    embedding_model: str = field(default_factory=lambda: _get_default_embedding_config()[1])
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -109,17 +118,36 @@ class RAGEngine:
         self.config = config or RAGConfig()
         self._store = vector_store or InMemoryVectorStore()
 
-        # 初始化 embedding adapter
+        # 初始化 embedding adapter（优先真实模型，失败回退 mock）
         if embedding_adapter:
             self._embedder = embedding_adapter
         else:
-            self._embedder = EmbeddingAdapter(
-                EmbeddingConfig(
-                    provider=self.config.embedding_provider,
-                    model=self.config.embedding_model,
-                    dimension=self.config.embedding_dimension,
+            try:
+                self._embedder = EmbeddingAdapter(
+                    EmbeddingConfig(
+                        provider=self.config.embedding_provider,
+                        model=self.config.embedding_model,
+                        dimension=self.config.embedding_dimension,
+                    )
                 )
-            )
+                # 健康检查验证可用性
+                health = self._embedder.health_check()
+                if health.get("status") != "healthy":
+                    raise RuntimeError(f"Embedding backend unhealthy: {health}")
+            except Exception as e:
+                warnings.warn(
+                    f"Embedding backend '{self.config.embedding_provider}' failed ({e}), "
+                    f"falling back to mock embeddings. "
+                    f"Set EMBEDDING_PROVIDER env var to configure.",
+                    RuntimeWarning,
+                )
+                self._embedder = EmbeddingAdapter(
+                    EmbeddingConfig(
+                        provider="mock",
+                        model="mock-model",
+                        dimension=self.config.embedding_dimension,
+                    )
+                )
 
         # 初始化分块器
         if chunker:
