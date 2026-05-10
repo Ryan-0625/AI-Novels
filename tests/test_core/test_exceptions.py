@@ -7,7 +7,7 @@
 """
 
 import pytest
-from src.deepnovel.core.exceptions import (
+from deepnovel.core.exceptions import (
     AINovelsException,
     ConfigException,
     AgentException,

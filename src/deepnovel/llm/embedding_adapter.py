@@ -25,6 +25,7 @@ class EmbeddingProvider(Enum):
     OLLAMA = "ollama"
     BGE = "bge"
     QWEN = "qwen"
+    MOCK = "mock"
 
 
 @dataclass
@@ -189,6 +190,22 @@ class BgeEmbeddingBackend(BaseEmbeddingBackend):
         return vectors
 
 
+class MockEmbeddingBackend(BaseEmbeddingBackend):
+    """Mock Embedding 后端 — 返回随机单位向量（开发/测试用）"""
+
+    def __init__(self, config: EmbeddingConfig):
+        super().__init__(config)
+        import random as _random
+        self._rng = _random.Random(42)
+
+    def embed(self, text: str) -> List[float]:
+        vec = [self._rng.gauss(0, 1) for _ in range(self.config.dimension)]
+        return self._normalize(vec)
+
+    def embed_batch(self, texts: List[str]) -> List[List[float]]:
+        return [self.embed(t) for t in texts]
+
+
 class EmbeddingAdapter:
     """Embedding 统一适配器"""
 
@@ -196,6 +213,7 @@ class EmbeddingAdapter:
         EmbeddingProvider.OPENAI: OpenAIEmbeddingBackend,
         EmbeddingProvider.OLLAMA: OllamaEmbeddingBackend,
         EmbeddingProvider.BGE: BgeEmbeddingBackend,
+        EmbeddingProvider.MOCK: MockEmbeddingBackend,
     }
 
     def __init__(self, config: EmbeddingConfig):

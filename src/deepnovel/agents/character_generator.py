@@ -115,7 +115,7 @@ class CharacterGeneratorAgent(BaseAgent):
         elif "status" in content:
             return self._handle_status_request(message)
         else:
-            return self._handle_general_request(message)
+            return self._handle_generate_request(message)
 
     def _get_task_id_from_message(self, message: Message) -> str:
         """从消息中获取任务ID"""

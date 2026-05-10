@@ -10,8 +10,8 @@ ConfigEnhancerAgent 单元测试
 import pytest
 from unittest.mock import patch
 
-from src.deepnovel.agents.implementations import ConfigEnhancerAgent
-from src.deepnovel.agents.base import AgentConfig, Message, MessageType
+from deepnovel.agents.implementations import ConfigEnhancerAgent
+from deepnovel.agents.base import AgentConfig, Message, MessageType
 
 
 @pytest.fixture

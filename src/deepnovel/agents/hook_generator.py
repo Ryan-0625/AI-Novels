@@ -188,7 +188,7 @@ class HookGeneratorAgent(BaseAgent):
         elif "chapter" in content and "state" in content:
             return self._handle_get_state(message)
 
-        return self._handle_general_request(message)
+        return self._handle_generate_hook(message)
 
     def _handle_generate_hook(self, message: Message) -> Message:
         """处理生成钩子请求"""

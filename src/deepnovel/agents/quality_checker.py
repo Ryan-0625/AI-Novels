@@ -15,6 +15,7 @@ from enum import Enum
 from collections import defaultdict
 
 from .base import BaseAgent, AgentConfig, Message, MessageType
+from deepnovel.persistence import get_persistence_manager
 
 
 class CheckType(Enum):
@@ -141,6 +142,9 @@ class QualityCheckerAgent(BaseAgent):
         self._total_issues_found = 0
         self._check_history: List[Dict[str, Any]] = []
 
+        # 缓存章节内容（由 _generate_quality_report 填充）
+        self._chapter_contents: Dict[str, str] = {}
+
     def process(self, message: Message) -> Message:
         """处理消息"""
         content = str(message.content).lower()
@@ -163,7 +167,7 @@ class QualityCheckerAgent(BaseAgent):
         elif "fix" in content and "suggestion" in content:
             return self._handle_get_suggestion(message)
 
-        return self._handle_general_request(message)
+        return self._handle_generate_report(message)
 
     def _handle_generate_report(self, message: Message) -> Message:
         """处理生成报告请求"""
@@ -473,6 +477,9 @@ class QualityCheckerAgent(BaseAgent):
         all_issues = []
         check_results = {}
 
+        # 加载章节内容供 LLM 检查使用
+        self._load_chapter_content(content_id, chapters)
+
         # 执行各项检查
         for check_type, rules in [
             (CheckType.COHERENCE, self._coherence_rules),
@@ -506,6 +513,46 @@ class QualityCheckerAgent(BaseAgent):
         )
 
         return report
+
+    def _load_chapter_content(self, content_id: str, chapters: List[str]) -> None:
+        """从数据库加载章节内容供 LLM 检查使用"""
+        self._chapter_contents = {}
+        pm = get_persistence_manager()
+        if not pm.mongodb_client:
+            return
+        try:
+            # 按章节号读取内容
+            for ch in chapters:
+                ch_num = None
+                for prefix in ["chapter_", "Chapter ", "第"]:
+                    if prefix in ch:
+                        digits = "".join(filter(str.isdigit, ch.split(prefix)[-1]))
+                        if digits:
+                            ch_num = int(digits)
+                            break
+                if ch_num is None:
+                    continue
+                cursor = pm.mongodb_client.read(
+                    collection="chapters",
+                    query={"task_id": content_id, "chapter_num": ch_num},
+                    limit=1,
+                )
+                docs = list(cursor) if hasattr(cursor, "__iter__") else [cursor]
+                for doc in docs if isinstance(docs, list) else [docs]:
+                    text = doc.get("content", "") if isinstance(doc, dict) else ""
+                    self._chapter_contents[ch] = text[:3000]
+        except Exception:
+            pass
+
+    def _build_content_section(self) -> str:
+        """构建章节内容文本供 LLM 评估"""
+        if not self._chapter_contents:
+            return ""
+        parts = ["\n\n## 章节内容："]
+        for ch_name, text in self._chapter_contents.items():
+            if text:
+                parts.append(f"\n### {ch_name}\n{text[:2000]}\n")
+        return "".join(parts)
 
     def _parse_llm_issues(self, llm_response: str, content_id: str, check_type: CheckType) -> List[QualityIssue]:
         """解析 LLM 返回的 JSON 问题列表"""
@@ -543,7 +590,8 @@ class QualityCheckerAgent(BaseAgent):
             f"你是一个小说质量评审专家。分析以下章节列表的时间线一致性、因果逻辑和过渡平滑度。\n\n"
             f"内容ID: {content_id}\n"
             f"章节数: {len(chapters)}\n"
-            f"章节列表: {', '.join(chapters[:10])}\n\n"
+            f"章节列表: {', '.join(chapters[:10])}\n"
+            f"{self._build_content_section()}\n"
             f"以JSON数组格式返回发现的问题，每个问题包含：\n"
             f"- severity: 严重程度（critical/major/minor/suggestion）\n"
             f"- message: 问题描述\n"
@@ -565,7 +613,8 @@ class QualityCheckerAgent(BaseAgent):
             f"你是一个小说质量评审专家。分析以下章节列表的世界观一致性、时间一致性和设定连贯性。\n\n"
             f"内容ID: {content_id}\n"
             f"章节数: {len(chapters)}\n"
-            f"章节列表: {', '.join(chapters[:10])}\n\n"
+            f"章节列表: {', '.join(chapters[:10])}\n"
+            f"{self._build_content_section()}\n"
             f"以JSON数组格式返回发现的问题，每个问题包含：\n"
             f"- severity: 严重程度（critical/major/minor/suggestion）\n"
             f"- message: 问题描述\n"
@@ -587,7 +636,8 @@ class QualityCheckerAgent(BaseAgent):
             f"你是一个小说风格评审专家。分析以下章节列表的词汇水平、句式多样性和语气一致性。\n\n"
             f"内容ID: {content_id}\n"
             f"章节数: {len(chapters)}\n"
-            f"章节列表: {', '.join(chapters[:10])}\n\n"
+            f"章节列表: {', '.join(chapters[:10])}\n"
+            f"{self._build_content_section()}\n"
             f"以JSON数组格式返回发现的问题，每个问题包含：\n"
             f"- severity: 严重程度（critical/major/minor/suggestion）\n"
             f"- message: 问题描述\n"
@@ -609,7 +659,8 @@ class QualityCheckerAgent(BaseAgent):
             f"你是一个小说情节评审专家。分析以下章节列表的叙事节奏、张力弧线和高潮位置。\n\n"
             f"内容ID: {content_id}\n"
             f"章节数: {len(chapters)}\n"
-            f"章节列表: {', '.join(chapters[:10])}\n\n"
+            f"章节列表: {', '.join(chapters[:10])}\n"
+            f"{self._build_content_section()}\n"
             f"以JSON数组格式返回发现的问题，每个问题包含：\n"
             f"- severity: 严重程度（critical/major/minor/suggestion）\n"
             f"- message: 问题描述\n"

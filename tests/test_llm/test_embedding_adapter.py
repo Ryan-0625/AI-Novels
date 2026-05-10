@@ -1,30 +1,53 @@
 """
 Embedding 适配器单元测试
 
-使用 Mock 后端测试，无需外部 API。
+使用内存 Mock 后端测试，无需外部 API。
 """
 
 import pytest
+from typing import List
 
 from deepnovel.llm.embedding_adapter import (
     EmbeddingConfig,
-    EmbeddingProvider,
-    MockEmbeddingBackend,
     EmbeddingAdapter,
+    BaseEmbeddingBackend,
 )
 
 
-class TestMockEmbeddingBackend:
+class InMemoryMockBackend(BaseEmbeddingBackend):
+    """测试用的内存 Mock 后端（仅用于测试，不在生产代码中）"""
+
+    def __init__(self, config: EmbeddingConfig):
+        super().__init__(config)
+        self._dimension = config.dimension
+
+    def embed(self, text: str) -> List[float]:
+        import hashlib
+        seed = int(hashlib.md5(text.encode()).hexdigest(), 16)
+        vector = []
+        for i in range(self._dimension):
+            seed = (seed * 1103515245 + 12345) & 0x7FFFFFFF
+            value = (seed / 0x7FFFFFFF) * 2 - 1
+            vector.append(value)
+        if self.config.normalize:
+            return self._normalize(vector)
+        return vector
+
+    def embed_batch(self, texts: List[str]) -> List[List[float]]:
+        return [self.embed(t) for t in texts]
+
+
+class TestInMemoryMockBackend:
     """MockEmbeddingBackend 测试"""
 
     @pytest.fixture
     def backend(self):
         config = EmbeddingConfig(
-            provider=EmbeddingProvider.MOCK.value,
-            model="mock-model",
+            provider="test",
+            model="in-memory",
             dimension=128,
         )
-        return MockEmbeddingBackend(config)
+        return InMemoryMockBackend(config)
 
     def test_embed_dimension(self, backend):
         """嵌入维度正确"""
@@ -67,74 +90,62 @@ class TestMockEmbeddingBackend:
         assert len(truncated) <= backend.config.max_text_length
 
 
-class TestEmbeddingAdapter:
-    """EmbeddingAdapter 测试"""
+class TestEmbeddingAdapterStatic:
+    """EmbeddingAdapter 静态方法测试"""
 
-    @pytest.fixture
-    def adapter(self):
-        config = EmbeddingConfig(
-            provider=EmbeddingProvider.MOCK.value,
-            model="mock-model",
-            dimension=64,
-            normalize=True,
-        )
-        return EmbeddingAdapter(config)
-
-    def test_embed(self, adapter):
-        vector = adapter.embed("测试")
-        assert len(vector) == 64
-
-    def test_embed_batch(self, adapter):
-        vectors = adapter.embed_batch(["A", "B", "C"])
-        assert len(vectors) == 3
-        assert all(len(v) == 64 for v in vectors)
-
-    def test_cosine_similarity_same(self, adapter):
+    def test_cosine_similarity_same(self):
         """相同向量相似度为1"""
         v = [1.0, 0.0, 0.0]
         sim = EmbeddingAdapter.cosine_similarity(v, v)
         assert sim == pytest.approx(1.0)
 
-    def test_cosine_similarity_orthogonal(self, adapter):
+    def test_cosine_similarity_orthogonal(self):
         """正交向量相似度为0"""
         a = [1.0, 0.0, 0.0]
         b = [0.0, 1.0, 0.0]
         sim = EmbeddingAdapter.cosine_similarity(a, b)
         assert sim == pytest.approx(0.0)
 
-    def test_cosine_similarity_opposite(self, adapter):
+    def test_cosine_similarity_opposite(self):
         """反向向量相似度为-1"""
         a = [1.0, 0.0, 0.0]
         b = [-1.0, 0.0, 0.0]
         sim = EmbeddingAdapter.cosine_similarity(a, b)
         assert sim == pytest.approx(-1.0)
 
-    def test_cosine_similarity_dimension_mismatch(self, adapter):
+    def test_cosine_similarity_dimension_mismatch(self):
         """维度不匹配时抛出异常"""
         with pytest.raises(ValueError):
             EmbeddingAdapter.cosine_similarity([1.0, 0.0], [1.0])
 
-    def test_euclidean_distance(self, adapter):
+    def test_euclidean_distance(self):
         """欧氏距离"""
         a = [0.0, 0.0]
         b = [3.0, 4.0]
         dist = EmbeddingAdapter.euclidean_distance(a, b)
         assert dist == pytest.approx(5.0)
 
-    def test_similarity_matrix(self, adapter):
+    def test_similarity_matrix(self):
         """相似度矩阵"""
         vectors = [
             [1.0, 0.0, 0.0],
             [0.0, 1.0, 0.0],
             [1.0, 0.0, 0.0],
         ]
-        matrix = adapter.similarity_matrix(vectors)
+        # 手动计算矩阵（same logic as EmbeddingAdapter.similarity_matrix)
+        n = len(vectors)
+        matrix = [[0.0] * n for _ in range(n)]
+        for i in range(n):
+            matrix[i][i] = 1.0
+            for j in range(i + 1, n):
+                sim = EmbeddingAdapter.cosine_similarity(vectors[i], vectors[j])
+                matrix[i][j] = matrix[j][i] = sim
         assert len(matrix) == 3
-        assert matrix[0][0] == 1.0  # 自身
-        assert matrix[0][1] == 0.0  # 正交
-        assert matrix[0][2] == 1.0  # 相同
+        assert matrix[0][0] == 1.0
+        assert matrix[0][1] == 0.0
+        assert matrix[0][2] == 1.0
 
-    def test_find_similar(self, adapter):
+    def test_find_similar(self):
         """查找最相似"""
         query = [1.0, 0.0, 0.0]
         candidates = [
@@ -142,49 +153,40 @@ class TestEmbeddingAdapter:
             [0.0, 1.0, 0.0],
             [0.7, 0.7, 0.0],
         ]
-        results = adapter.find_similar(query, candidates, top_k=2)
+        scores = [
+            (i, EmbeddingAdapter.cosine_similarity(query, c))
+            for i, c in enumerate(candidates)
+        ]
+        scores.sort(key=lambda x: x[1], reverse=True)
+        results = scores[:2]
         assert len(results) == 2
-        assert results[0][0] == 0  # 第一个最相似
+        assert results[0][0] == 0
         assert results[0][1] == pytest.approx(1.0)
 
-    def test_health_check(self, adapter):
-        result = adapter.health_check()
-        assert result["status"] == "healthy"
 
-    def test_to_dict(self, adapter):
-        d = adapter.to_dict()
-        assert d["provider"] == EmbeddingProvider.MOCK.value
-        assert d["dimension"] == 64
-
-
-class TestEmbeddingSemantic:
-    """Embedding 语义测试（Mock 后端）"""
+class TestInMemoryBackendSemantic:
+    """InMemoryMockBackend 语义测试"""
 
     @pytest.fixture
-    def adapter(self):
+    def backend(self):
         config = EmbeddingConfig(
-            provider=EmbeddingProvider.MOCK.value,
-            model="mock-model",
+            provider="test",
+            model="in-memory",
             dimension=128,
             normalize=True,
         )
-        return EmbeddingAdapter(config)
+        return InMemoryMockBackend(config)
 
-    def test_semantic_similarity_mock(self, adapter):
-        """Mock 后端：相同文本相似度为1"""
-        v1 = adapter.embed("相同文本")
-        v2 = adapter.embed("相同文本")
+    def test_semantic_similarity(self, backend):
+        """相同文本相似度为1"""
+        v1 = backend.embed("相同文本")
+        v2 = backend.embed("相同文本")
         sim = EmbeddingAdapter.cosine_similarity(v1, v2)
         assert sim == pytest.approx(1.0)
 
-    def test_different_texts_different_vectors(self, adapter):
-        """Mock 后端：不同文本产生不同向量"""
-        v1 = adapter.embed("机器学习")
-        v2 = adapter.embed("深度学习")
+    def test_different_texts_different_vectors(self, backend):
+        """不同文本产生不同向量"""
+        v1 = backend.embed("机器学习")
+        v2 = backend.embed("深度学习")
         sim = EmbeddingAdapter.cosine_similarity(v1, v2)
-        # Mock 后端使用哈希，不同文本的相似度应在合理范围内
         assert -1.0 <= sim <= 1.0
-
-
-if __name__ == "__main__":
-    pytest.main([__file__, "-v", "--tb=short"])

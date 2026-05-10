@@ -111,7 +111,7 @@ class HealthCheckerAgent(BaseAgent):
         elif "reset" in content:
             return self._handle_reset_request(message)
         else:
-            return self._handle_general_request(message)
+            return self._handle_check_request(message)
 
     def _handle_check_request(self, message: Message) -> Message:
         """处理检查请求"""

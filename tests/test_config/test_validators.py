@@ -7,7 +7,7 @@
 """
 
 import pytest
-from src.deepnovel.utils.validators import (
+from deepnovel.utils.validators import (
     FieldValidator,
     SchemaValidator,
     ValidationResult,

@@ -10,8 +10,8 @@ HealthCheckerAgent 单元测试
 import pytest
 from unittest.mock import patch, MagicMock
 
-from src.deepnovel.agents.implementations import HealthCheckerAgent
-from src.deepnovel.agents.base import AgentConfig, Message, MessageType
+from deepnovel.agents.implementations import HealthCheckerAgent
+from deepnovel.agents.base import AgentConfig, Message, MessageType
 
 
 @pytest.fixture
@@ -30,7 +30,7 @@ class TestHealthCheckerInitialization:
 
 
 class TestHealthCheckerProcess:
-    @patch("src.deepnovel.services.health_service.get_health_service")
+    @patch("deepnovel.services.health_service.get_health_service")
     def test_process_with_healthy_system(self, mock_get_service, agent):
         mock_service = MagicMock()
         mock_service.check_system_health.return_value = {
@@ -49,7 +49,7 @@ class TestHealthCheckerProcess:
         assert "HEALTHY" in result.content or "healthy" in result.content
         assert "database" in result.content
 
-    @patch("src.deepnovel.services.health_service.get_health_service")
+    @patch("deepnovel.services.health_service.get_health_service")
     def test_process_with_unhealthy_system(self, mock_get_service, agent):
         mock_service = MagicMock()
         mock_service.check_system_health.return_value = {
@@ -67,7 +67,7 @@ class TestHealthCheckerProcess:
         assert "degraded" in result.content or "DEGRADED" in result.content
 
     def test_process_service_exception(self, agent):
-        with patch("src.deepnovel.services.health_service.get_health_service", side_effect=RuntimeError("Service not available")):
+        with patch("deepnovel.services.health_service.get_health_service", side_effect=RuntimeError("Service not available")):
             msg = Message(id="t3", type=MessageType.TEXT, content="check health")
             result = agent.process(msg)
 

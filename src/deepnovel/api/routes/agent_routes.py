@@ -12,6 +12,9 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
+from deepnovel.api.dependencies import get_config_hub_dep
+from deepnovel.config.hub import ConfigHub
+
 router = APIRouter(prefix="/agents", tags=["agents"])
 
 
@@ -106,13 +109,23 @@ async def get_agent_detail(
 async def update_agent_config(
     agent_name: str,
     req: AgentConfigUpdateRequest,
+    hub: ConfigHub = Depends(get_config_hub_dep),
 ):
     """更新Agent配置"""
-    return AgentConfigUpdateResponse(
-        agent_name=agent_name,
-        success=False,
-        message="Agent config update not yet supported in this version",
-    )
+    try:
+        for key, value in req.config.items():
+            hub.set(f"agent.{agent_name}.{key}", value)
+        return AgentConfigUpdateResponse(
+            agent_name=agent_name,
+            success=True,
+            message=f"Config updated for agent '{agent_name}'",
+        )
+    except Exception as e:
+        return AgentConfigUpdateResponse(
+            agent_name=agent_name,
+            success=False,
+            message=str(e),
+        )
 
 
 @router.get("/{agent_name}/metrics", response_model=AgentMetricsResponse, summary="获取Agent运行指标")
@@ -121,8 +134,25 @@ async def get_agent_metrics(
     orchestrator=Depends(get_task_orchestrator),
 ):
     """获取Agent的运行时指标"""
+    stats = orchestrator.get_stats()
+    workers = orchestrator.list_workers()
+    total_tasks = stats.get("submitted", 0)
+    completed = stats.get("completed", 0)
+    failed = stats.get("failed", 0)
+    success_rate = completed / max(total_tasks, 1)
+
+    # 查找对应worker
+    worker_metrics = {}
+    for w in workers:
+        if w["name"] == agent_name:
+            worker_metrics = w.get("metrics", {})
+            break
+
     return AgentMetricsResponse(
         agent_name=agent_name,
-        total_tasks=0,
-        success_rate=1.0,
+        total_tasks=worker_metrics.get("total_tasks", total_tasks),
+        success_rate=worker_metrics.get("success_rate", success_rate),
+        avg_response_time_ms=worker_metrics.get("avg_response_time_ms"),
+        error_count=worker_metrics.get("error_count", failed),
+        last_active=worker_metrics.get("last_active"),
     )

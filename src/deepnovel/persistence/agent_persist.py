@@ -529,3 +529,92 @@ def save_chapter_to_db(
     """便捷函数：保存章节"""
     pm = get_persistence_manager()
     return ChapterPersistence.save_chapter(pm, task_id, chapter_num, title, content, word_count, extra_data)
+
+
+class TaskPersistence:
+    """任务状态持久化"""
+
+    COLLECTION = "tasks"
+
+    @staticmethod
+    def save_task(
+        pm: PersistenceManager,
+        task_id: str,
+        task_data: Dict[str, Any]
+    ) -> Optional[str]:
+        """保存任务状态到 MongoDB（文件回退）"""
+        if not pm.mongodb_client:
+            return _file_fallback("tasks", task_id, "task.json", {
+                "task_id": task_id,
+                **task_data,
+                "saved_at": datetime.utcnow().isoformat(),
+            })
+        try:
+            doc = {
+                "task_id": task_id,
+                "updated_at": datetime.utcnow(),
+                **task_data,
+            }
+            # 使用 upsert 避免重复
+            return pm.mongodb_client.update(
+                collection=TaskPersistence.COLLECTION,
+                query={"task_id": task_id},
+                updates={"$set": doc},
+                upsert=True,
+            )
+        except Exception as e:
+            print(f"Failed to save task {task_id}: {e}")
+            return _file_fallback("tasks", task_id, "task.json", {
+                "task_id": task_id,
+                **task_data,
+                "saved_at": datetime.utcnow().isoformat(),
+            })
+
+    @staticmethod
+    def load_task(
+        pm: PersistenceManager,
+        task_id: str
+    ) -> Optional[Dict[str, Any]]:
+        """从 MongoDB 加载任务（文件回退）"""
+        if pm.mongodb_client:
+            try:
+                doc = pm.mongodb_client.find_one(
+                    collection=TaskPersistence.COLLECTION,
+                    query={"task_id": task_id},
+                )
+                if doc:
+                    return doc
+            except Exception:
+                pass
+        # 文件回退
+        filepath = os.path.join(_OUTPUT_DIR, "tasks", task_id, "task.json")
+        if os.path.exists(filepath):
+            with open(filepath, "r", encoding="utf-8") as f:
+                return json.load(f)
+        return None
+
+    @staticmethod
+    def list_tasks(
+        pm: PersistenceManager,
+        limit: int = 50
+    ) -> List[Dict[str, Any]]:
+        """列出最近的任务"""
+        if pm.mongodb_client:
+            try:
+                return list(pm.mongodb_client.read(
+                    collection=TaskPersistence.COLLECTION,
+                    query={},
+                    limit=limit,
+                ))
+            except Exception:
+                pass
+        # 文件回退：扫描 output/tasks/ 目录
+        tasks_dir = os.path.join(_OUTPUT_DIR, "tasks")
+        results = []
+        if os.path.isdir(tasks_dir):
+            for tid in sorted(os.listdir(tasks_dir))[-limit:]:
+                task_file = os.path.join(tasks_dir, tid, "task.json")
+                if os.path.exists(task_file):
+                    with open(task_file, "r", encoding="utf-8") as f:
+                        results.append(json.load(f))
+        return results

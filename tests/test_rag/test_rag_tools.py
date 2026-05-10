@@ -11,22 +11,16 @@ from deepnovel.agents.tools.rag_tools import (
     DocumentRetrieveTool,
     KnowledgeBaseTool,
 )
-from deepnovel.llm.embedding_adapter import EmbeddingAdapter, EmbeddingConfig, EmbeddingProvider
 from deepnovel.rag import RAGEngine, RAGConfig
 from deepnovel.rag.chunker import Chunk
 from deepnovel.vector_store.memory_store import InMemoryVectorStore
+from conftest import InMemoryTestEmbedder
 
 
 @pytest.fixture
 def sample_engine():
     """创建带数据的 RAG 引擎"""
-    embedder = EmbeddingAdapter(
-        EmbeddingConfig(
-            provider=EmbeddingProvider.MOCK.value,
-            model="mock-model",
-            dimension=64,
-        )
-    )
+    embedder = InMemoryTestEmbedder()
     store = InMemoryVectorStore(embedding_dim=64, embedding_adapter=embedder)
     engine = RAGEngine(
         config=RAGConfig(

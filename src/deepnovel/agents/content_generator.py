@@ -203,7 +203,7 @@ class ContentGeneratorAgent(BaseAgent):
         elif "history" in content or "history" in content:
             return self._handle_history_command(message)
 
-        return self._handle_general_request(message)
+        return self._handle_generate_content(message)
 
     def _get_task_id_from_message(self, message: Message) -> str:
         """从消息中获取任务ID"""

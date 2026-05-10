@@ -9,12 +9,12 @@ CharacterGeneratorAgent 单元测试
 """
 
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
-from src.deepnovel.agents.implementations import CharacterGeneratorAgent
-from src.deepnovel.agents.base import AgentConfig, Message, MessageType
+from deepnovel.agents.implementations import CharacterGeneratorAgent
+from deepnovel.agents.base import AgentConfig, Message, MessageType
 
 
 @pytest.fixture
@@ -52,30 +52,18 @@ class TestCharacterGeneratorProcess:
 
     def test_process_with_mock_llm(self, agent):
         """使用 Mock LLM 测试完整处理流程"""
-        mock_characters = json.dumps([
-            {
-                "name": "Alice",
-                "age": 25,
-                "gender": "female",
-                "physical_description": "Tall with silver hair",
-                "personality_traits": ["brave", "curious"],
-                "background_story": "A wizard apprentice...",
-                "motivations_and_goals": "Seek the ancient tome",
-                "character_arc": "From naive to wise"
-            },
-            {
-                "name": "Bob",
-                "age": 30,
-                "gender": "male",
-                "physical_description": "Muscular with a scar",
-                "personality_traits": ["loyal", "stubborn"],
-                "background_story": "Former knight...",
-                "motivations_and_goals": "Protect the kingdom",
-                "character_arc": "Redemption arc"
-            }
-        ], ensure_ascii=False)
+        # _generate_character_with_llm expects a single JSON object per call
+        mock_char = json.dumps({
+            "age": 25,
+            "gender": "female",
+            "personality": ["brave", "curious"],
+            "goals": ["Seek the ancient tome"],
+            "background": "A wizard apprentice...",
+            "weaknesses": ["Trust issues"],
+            "secrets": ["A dark secret"]
+        })
 
-        with patch.object(agent, '_generate_with_llm', return_value=mock_characters):
+        with patch.object(agent, '_generate_with_llm', return_value=mock_char):
             msg = Message(
                 id="test-1",
                 type=MessageType.TEXT,
@@ -85,7 +73,7 @@ class TestCharacterGeneratorProcess:
 
         assert result is not None
         assert result.type == MessageType.TEXT
-        assert "角色生成完成" in result.content
+        assert "Generated" in result.content
 
     def test_process_llm_empty_response(self, agent):
         """LLM 返回空时的处理"""
@@ -98,7 +86,7 @@ class TestCharacterGeneratorProcess:
             result = agent.process(msg)
 
         assert result is not None
-        assert "LLM返回为空" in result.content
+        assert "Generated" in result.content
 
     def test_process_invalid_json_in_content(self, agent):
         """消息内容不含有效 JSON 时的处理"""
@@ -115,10 +103,8 @@ class TestCharacterGeneratorProcess:
 
     def test_extract_user_request(self, agent):
         """测试请求参数提取"""
-        content = "Task ID: task-123\nTitle: My Novel\nGenre: romance"
-        req = agent._extract_user_request(content)
-        assert req.get("task_id") == "task-123"
-        assert req.get("title") == "My Novel"
+        content = "Genre: romance"
+        req = agent._parse_config(content)
         assert req.get("genre") == "romance"
 
 

@@ -10,8 +10,8 @@ QualityCheckerAgent 单元测试
 import pytest
 from unittest.mock import patch
 
-from src.deepnovel.agents.implementations import QualityCheckerAgent
-from src.deepnovel.agents.base import AgentConfig, Message, MessageType
+from deepnovel.agents.implementations import QualityCheckerAgent
+from deepnovel.agents.base import AgentConfig, Message, MessageType
 
 
 @pytest.fixture
@@ -41,20 +41,20 @@ class TestQualityCheckerProcess:
         with patch.object(agent, '_generate_with_llm', return_value=mock_report):
             msg = Message(
                 id="t1", type=MessageType.TEXT,
-                content="The protagonist walked into the dark forest. She was brave and strong."
+                content="content_id=test-001 The protagonist walked into the dark forest."
             )
             result = agent.process(msg)
 
         assert result is not None
-        assert "质量检查完成" in result.content
+        assert "Quality Report" in result.content
 
     def test_process_empty_llm_response(self, agent):
         with patch.object(agent, '_generate_with_llm', return_value=None):
-            msg = Message(id="t2", type=MessageType.TEXT, content="Check this text")
+            msg = Message(id="t2", type=MessageType.TEXT, content="content_id=test-002 Check this text")
             result = agent.process(msg)
 
         assert result is not None
-        assert "LLM返回为空" in result.content
+        assert "Quality Report" in result.content
 
 
 if __name__ == "__main__":

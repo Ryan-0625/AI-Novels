@@ -6,10 +6,10 @@
 
 import pytest
 
-from deepnovel.llm.embedding_adapter import EmbeddingAdapter, EmbeddingConfig, EmbeddingProvider
 from deepnovel.rag.chunker import Chunk
 from deepnovel.rag.indexer import DocumentIndexer
 from deepnovel.vector_store.memory_store import InMemoryVectorStore
+from conftest import InMemoryTestEmbedder
 
 
 class TestDocumentIndexer:
@@ -18,13 +18,7 @@ class TestDocumentIndexer:
     @pytest.fixture
     def indexer(self):
         store = InMemoryVectorStore(embedding_dim=64)
-        embedder = EmbeddingAdapter(
-            EmbeddingConfig(
-                provider=EmbeddingProvider.MOCK.value,
-                model="mock-model",
-                dimension=64,
-            )
-        )
+        embedder = InMemoryTestEmbedder()
         return DocumentIndexer(vector_store=store, embedding_adapter=embedder)
 
     @pytest.mark.asyncio
@@ -91,7 +85,7 @@ class TestDocumentIndexer:
 
         stats = await indexer.get_stats()
         assert stats["total_documents"] == 1
-        assert stats["embedding_provider"] == EmbeddingProvider.MOCK.value
+        assert stats["embedding_provider"] == "test"
         assert stats["embedding_dimension"] == 64
 
     @pytest.mark.asyncio

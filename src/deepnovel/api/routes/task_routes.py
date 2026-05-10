@@ -232,12 +232,23 @@ async def task_action(
     orchestrator=Depends(get_task_orchestrator),
 ):
     """对任务执行操作（暂停/恢复/取消）"""
-    # TaskOrchestrator 当前版本不支持暂停/恢复，返回友好提示
+    action = req.action.lower()
+
+    if action == "cancel":
+        success = await orchestrator.cancel(task_id)
+        return TaskActionResponse(
+            task_id=task_id,
+            action=action,
+            success=success,
+            message="Task cancelled" if success else "Task not found or already completed",
+        )
+
+    # pause/resume 暂未实现
     return TaskActionResponse(
         task_id=task_id,
-        action=req.action,
+        action=action,
         success=False,
-        message=f"Action '{req.action}' not yet supported in this version",
+        message=f"Action '{action}' not yet supported in this version",
     )
 
 

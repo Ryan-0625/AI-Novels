@@ -12,8 +12,9 @@ from deepnovel.core.event_bus import EventBus, EventType
 from deepnovel.core.working_memory import WorkingMemory
 from deepnovel.llm.tier import ModelTier, TierConfig, TierRouter
 from deepnovel.rag import RAGEngine, RAGConfig
-from deepnovel.llm.embedding_adapter import EmbeddingAdapter, EmbeddingConfig, EmbeddingProvider
+from deepnovel.llm.embedding_adapter import EmbeddingConfig, BaseEmbeddingBackend
 from deepnovel.vector_store.memory_store import InMemoryVectorStore
+from typing import List
 
 
 @pytest.fixture
@@ -29,16 +30,22 @@ def basic_config():
     )
 
 
+class InMemoryTestEmbedder(BaseEmbeddingBackend):
+    """测试用内存嵌入器"""
+    def __init__(self, config: EmbeddingConfig):
+        super().__init__(config)
+    def embed(self, text: str) -> List[float]:
+        import hashlib
+        seed = int(hashlib.md5(text.encode()).hexdigest(), 16)
+        return [((seed >> i) & 0xFF) / 255.0 for i in range(0, 64, 8)]  # 8维
+    def embed_batch(self, texts: List[str]) -> List[List[float]]:
+        return [self.embed(t) for t in texts]
+
+
 @pytest.fixture
 def mock_rag_engine():
     """创建 Mock RAG 引擎"""
-    embedder = EmbeddingAdapter(
-        EmbeddingConfig(
-            provider=EmbeddingProvider.MOCK.value,
-            model="mock-model",
-            dimension=64,
-        )
-    )
+    embedder = InMemoryTestEmbedder(EmbeddingConfig(provider="test", model="test", dimension=64))
     store = InMemoryVectorStore(embedding_dim=64, embedding_adapter=embedder)
     return RAGEngine(
         config=RAGConfig(

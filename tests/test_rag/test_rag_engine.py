@@ -6,10 +6,10 @@ RAG 引擎单元测试
 
 import pytest
 
-from deepnovel.llm.embedding_adapter import EmbeddingAdapter, EmbeddingConfig, EmbeddingProvider
 from deepnovel.rag import RAGConfig, RAGResult, RAGEngine
 from deepnovel.rag.chunker import Chunk, ChunkStrategy
 from deepnovel.vector_store.memory_store import InMemoryVectorStore
+from conftest import InMemoryTestEmbedder
 
 
 class TestRAGConfig:
@@ -76,13 +76,7 @@ class TestRAGEngine:
 
     @pytest.fixture
     def engine(self):
-        embedder = EmbeddingAdapter(
-            EmbeddingConfig(
-                provider=EmbeddingProvider.MOCK.value,
-                model="mock-model",
-                dimension=64,
-            )
-        )
+        embedder = InMemoryTestEmbedder()
         store = InMemoryVectorStore(embedding_dim=64, embedding_adapter=embedder)
         return RAGEngine(
             config=RAGConfig(
@@ -91,7 +85,7 @@ class TestRAGEngine:
                 top_k=3,
                 min_chunk_size=1,
                 embedding_dimension=64,
-                embedding_provider=EmbeddingProvider.MOCK.value,
+                embedding_provider=embedder.config.provider,
             ),
             vector_store=store,
             embedding_adapter=embedder,

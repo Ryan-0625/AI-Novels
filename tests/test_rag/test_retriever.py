@@ -6,10 +6,10 @@
 
 import pytest
 
-from deepnovel.llm.embedding_adapter import EmbeddingAdapter, EmbeddingConfig, EmbeddingProvider
 from deepnovel.rag.retriever import RetrievedChunk, SemanticRetriever
 from deepnovel.vector_store import VectorDocument
 from deepnovel.vector_store.memory_store import InMemoryVectorStore
+from conftest import InMemoryTestEmbedder
 
 
 class TestRetrievedChunk:
@@ -54,13 +54,7 @@ class TestSemanticRetriever:
     @pytest.fixture
     async def setup_store(self):
         """创建带数据的存储和检索器"""
-        embedder = EmbeddingAdapter(
-            EmbeddingConfig(
-                provider=EmbeddingProvider.MOCK.value,
-                model="mock-model",
-                dimension=64,
-            )
-        )
+        embedder = InMemoryTestEmbedder()
         # 将 embedder 传给 store，确保查询和文档使用相同的嵌入方法
         store = InMemoryVectorStore(embedding_dim=64, embedding_adapter=embedder)
 
