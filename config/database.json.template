@@ -34,7 +34,7 @@
     "chromadb": {
       "host": "localhost",
       "port": 8000,
-      "collection_prefix": "deepnovel_",
+      "collection_prefix": "ai_novels_",
       "embedding_function": "default",
       "persist_dir": "data/chromadb"
     }
